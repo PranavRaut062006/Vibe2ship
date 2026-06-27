@@ -1,0 +1,218 @@
+.backdrop {
+  position: fixed;
+  inset: 0;
+  background-color: rgba(0, 0, 0, 0.75);
+  backdrop-filter: blur(6px);
+  z-index: 200;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: var(--sp-4);
+}
+
+.modal {
+  width: 680px;
+  max-width: 100%;
+  background-color: var(--surface);
+  border: 1px solid var(--primary);
+  border-radius: var(--radius-lg);
+  padding: var(--sp-6);
+  box-shadow: 0 20px 60px rgba(0, 0, 0, 0.9), 0 0 40px rgba(108, 99, 255, 0.25);
+  display: flex;
+  flex-direction: column;
+  gap: var(--sp-6);
+  max-height: 90vh;
+  overflow-y: auto;
+}
+
+.header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: var(--sp-3);
+}
+
+.titleRow {
+  display: flex;
+  align-items: center;
+  gap: var(--sp-2);
+}
+
+.title {
+  font-size: 20px;
+  font-weight: var(--weight-bold);
+  color: white;
+  margin: 0;
+}
+
+.activePill {
+  font-size: 12px;
+  font-weight: var(--weight-semibold);
+  color: var(--primary);
+  background-color: var(--primary-dim);
+  padding: 4px 12px;
+  border-radius: var(--radius-full);
+  border: 1px solid rgba(108, 99, 255, 0.3);
+}
+
+.closeBtn {
+  color: var(--text-muted);
+}
+
+.closeBtn:hover {
+  color: white;
+}
+
+.grid {
+  display: grid;
+  grid-template-columns: repeat(2, 1fr);
+  gap: var(--sp-4);
+}
+
+.card {
+  background-color: var(--surface-elevated);
+  border: 1px solid var(--border);
+  border-radius: var(--radius-md);
+  padding: var(--sp-5);
+  display: flex;
+  flex-direction: column;
+  gap: var(--sp-2);
+  cursor: pointer;
+  transition: all var(--transition-fast);
+  position: relative;
+}
+
+.card:hover {
+  border-color: rgba(108, 99, 255, 0.4);
+  transform: translateY(-2px);
+}
+
+.cardActive {
+  border-color: var(--primary);
+  background-color: rgba(108, 99, 255, 0.08);
+  box-shadow: 0 0 20px rgba(108, 99, 255, 0.2);
+}
+
+.cardPending {
+  border-color: var(--accent);
+  background-color: rgba(0, 212, 170, 0.08);
+}
+
+.cardHeader {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 4px;
+}
+
+.badgeActive {
+  font-size: 10px;
+  font-weight: var(--weight-bold);
+  color: white;
+  background-color: var(--primary);
+  padding: 2px 8px;
+  border-radius: var(--radius-sm);
+  text-transform: uppercase;
+}
+
+.badgePending {
+  font-size: 10px;
+  font-weight: var(--weight-bold);
+  color: #0A0A0F;
+  background-color: var(--accent);
+  padding: 2px 8px;
+  border-radius: var(--radius-sm);
+  text-transform: uppercase;
+}
+
+.modeName {
+  font-size: 16px;
+  font-weight: var(--weight-semibold);
+  color: white;
+  margin: 0;
+}
+
+.modeDesc {
+  font-size: var(--text-small);
+  color: var(--text-secondary);
+  line-height: 1.4;
+  margin: 0;
+}
+
+/* ---- Priority Preview Box ---- */
+.previewBox {
+  background: linear-gradient(135deg, rgba(108, 99, 255, 0.15) 0%, var(--surface-elevated) 100%);
+  border: 1px solid var(--primary);
+  border-radius: var(--radius-md);
+  padding: var(--sp-5);
+  display: flex;
+  flex-direction: column;
+  gap: var(--sp-3);
+  animation: slideUpPreview 0.3s cubic-bezier(0.16, 1, 0.3, 1);
+}
+
+@keyframes slideUpPreview {
+  from { opacity: 0; transform: translateY(10px); }
+  to { opacity: 1; transform: translateY(0); }
+}
+
+.previewHeader {
+  font-size: 14px;
+  color: var(--text-secondary);
+  border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+  padding-bottom: 8px;
+}
+
+.previewHeader strong {
+  color: white;
+}
+
+.previewList {
+  list-style: none;
+  padding: 0;
+  margin: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  font-size: 13px;
+  color: white;
+  font-family: var(--font-mono);
+}
+
+.previewActions {
+  display: flex;
+  justify-content: flex-end;
+  gap: var(--sp-3);
+  margin-top: var(--sp-2);
+}
+
+.cancelBtn {
+  padding: 8px 16px;
+  color: var(--text-secondary);
+  border-radius: var(--radius-sm);
+}
+
+.cancelBtn:hover {
+  color: white;
+}
+
+.confirmBtn {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  background-color: var(--primary);
+  color: white;
+  padding: 8px 20px;
+  border-radius: var(--radius-sm);
+  font-weight: var(--weight-medium);
+}
+
+.confirmBtn:hover {
+  background-color: var(--primary-hover);
+}
+
+@media (max-width: 640px) {
+  .grid {
+    grid-template-columns: 1fr;
+  }
+}

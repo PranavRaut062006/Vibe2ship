@@ -1,0 +1,41 @@
+.fab {
+  position: fixed;
+  bottom: var(--sp-8);
+  right: var(--sp-8);
+  width: 56px;
+  height: 56px;
+  border-radius: var(--radius-full);
+  background-color: var(--primary);
+  color: white;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  z-index: 35;
+  box-shadow: 0 4px 20px rgba(108, 99, 255, 0.4);
+  transition: transform var(--transition-fast);
+}
+
+.fab:hover {
+  transform: scale(1.08);
+}
+
+.icon {
+  position: relative;
+  z-index: 2;
+}
+
+.pulse {
+  position: absolute;
+  inset: 0;
+  border-radius: var(--radius-full);
+  background-color: var(--primary);
+  animation: pulseGlow 2.5s infinite;
+  z-index: 1;
+}
+
+@media (max-width: 768px) {
+  .fab {
+    bottom: calc(var(--mobile-nav-height) + var(--sp-4));
+    right: var(--sp-4);
+  }
+}

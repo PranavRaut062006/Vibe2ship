@@ -1,0 +1,64 @@
+.mobileNav {
+  display: none;
+  position: fixed;
+  bottom: 0;
+  left: 0;
+  width: 100vw;
+  height: var(--mobile-nav-height);
+  background-color: var(--surface);
+  border-top: 1px solid var(--border);
+  z-index: 45;
+  padding: 0 var(--sp-2);
+}
+
+.item {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 4px;
+  color: var(--text-secondary);
+  transition: color var(--transition-fast);
+}
+
+.active {
+  color: var(--primary);
+}
+
+.iconWrapper {
+  position: relative;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.icon {
+  color: var(--text-secondary);
+}
+
+.activeIcon {
+  color: var(--primary);
+}
+
+.aiDot {
+  position: absolute;
+  top: -2px;
+  right: -4px;
+  width: 6px;
+  height: 6px;
+  background-color: var(--primary);
+  border-radius: var(--radius-full);
+  box-shadow: 0 0 6px var(--primary);
+}
+
+.label {
+  font-size: 11px;
+  font-weight: var(--weight-medium);
+}
+
+@media (max-width: 768px) {
+  .mobileNav {
+    display: flex;
+  }
+}

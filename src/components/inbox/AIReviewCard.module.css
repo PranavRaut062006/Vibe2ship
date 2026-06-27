@@ -1,0 +1,292 @@
+.card {
+  background-color: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: var(--radius-lg);
+  padding: var(--sp-6);
+  box-shadow: var(--shadow-card);
+  display: flex;
+  flex-direction: column;
+  gap: var(--sp-4);
+  transition: all var(--transition-fast);
+}
+
+.card:hover {
+  border-color: rgba(108, 99, 255, 0.4);
+  box-shadow: var(--shadow-card), 0 0 20px rgba(108, 99, 255, 0.1);
+}
+
+.cardSelected {
+  border-color: var(--primary);
+  background-color: rgba(108, 99, 255, 0.04);
+}
+
+.topRow {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: var(--sp-3);
+  flex-wrap: wrap;
+}
+
+.topLeft {
+  display: flex;
+  align-items: center;
+  gap: var(--sp-3);
+  flex: 1;
+}
+
+.checkbox {
+  width: 18px;
+  height: 18px;
+  accent-color: var(--primary);
+  cursor: pointer;
+}
+
+.pBadge {
+  font-size: 11px;
+  font-weight: var(--weight-bold);
+  padding: 2px 8px;
+  border-radius: var(--radius-sm);
+  text-transform: uppercase;
+}
+
+.p1 { background-color: var(--danger-glow); color: var(--danger); }
+.p2 { background-color: var(--warning-glow); color: var(--warning); }
+.p3 { background-color: rgba(59, 130, 246, 0.15); color: #3B82F6; }
+
+.title {
+  font-size: 16px;
+  font-weight: var(--weight-semibold);
+  color: white;
+  margin: 0;
+}
+
+.confidenceChip {
+  font-size: var(--text-xs);
+  font-weight: var(--weight-medium);
+  color: var(--accent);
+  background-color: var(--accent-glow);
+  padding: 4px 10px;
+  border-radius: var(--radius-full);
+}
+
+.chipsRow {
+  display: flex;
+  flex-wrap: wrap;
+  gap: var(--sp-2);
+  padding-left: 28px;
+}
+
+.chip {
+  background-color: var(--surface-elevated);
+  border: 1px solid var(--border);
+  color: var(--text-secondary);
+  font-size: var(--text-xs);
+  padding: 4px 10px;
+  border-radius: var(--radius-sm);
+}
+
+.sourceSection {
+  padding-left: 28px;
+  display: flex;
+  flex-direction: column;
+  gap: var(--sp-2);
+}
+
+.sourceTrigger {
+  display: flex;
+  align-items: center;
+  gap: var(--sp-2);
+  cursor: pointer;
+  color: var(--text-muted);
+  font-size: var(--text-small);
+  transition: color var(--transition-fast);
+}
+
+.sourceTrigger:hover {
+  color: var(--text-primary);
+}
+
+.sourceSender {
+  flex: 1;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.sourceDetails {
+  background-color: var(--surface-elevated);
+  border-radius: var(--radius-md);
+  padding: var(--sp-3) var(--sp-4);
+  display: flex;
+  flex-direction: column;
+  gap: var(--sp-2);
+  border: 1px solid rgba(255, 255, 255, 0.04);
+}
+
+.snippet {
+  font-size: var(--text-small);
+  color: var(--text-secondary);
+  font-style: italic;
+  line-height: 1.4;
+}
+
+.reasoning {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  font-size: 12px;
+  color: var(--primary);
+  font-weight: var(--weight-medium);
+}
+
+.actionRow {
+  display: flex;
+  align-items: center;
+  gap: var(--sp-3);
+  padding-left: 28px;
+  padding-top: var(--sp-2);
+}
+
+.addBtn {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  background-color: var(--primary);
+  color: white;
+  padding: 8px 16px;
+  border-radius: var(--radius-md);
+  font-size: var(--text-body);
+  font-weight: var(--weight-medium);
+  transition: all var(--transition-fast);
+}
+
+.addBtn:hover {
+  background-color: var(--primary-hover);
+  transform: scale(1.02);
+}
+
+.editBtn {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  background-color: transparent;
+  border: 1px solid var(--border);
+  color: var(--text-primary);
+  padding: 8px 16px;
+  border-radius: var(--radius-md);
+  font-size: var(--text-body);
+  transition: all var(--transition-fast);
+}
+
+.editBtn:hover {
+  border-color: var(--text-muted);
+  background-color: rgba(255, 255, 255, 0.05);
+}
+
+.ignoreBtn {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  background-color: transparent;
+  color: var(--text-muted);
+  padding: 8px 16px;
+  border-radius: var(--radius-md);
+  font-size: var(--text-body);
+  transition: all var(--transition-fast);
+}
+
+.ignoreBtn:hover {
+  color: var(--danger);
+  background-color: var(--danger-glow);
+}
+
+/* ---- Inline Edit Form ---- */
+.editForm {
+  padding: var(--sp-4);
+  margin-left: 28px;
+  background-color: var(--surface-elevated);
+  border: 1px solid rgba(108, 99, 255, 0.3);
+  border-radius: var(--radius-md);
+  display: flex;
+  flex-direction: column;
+  gap: var(--sp-4);
+}
+
+.formGroup {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+  flex: 1;
+}
+
+.formGroup label {
+  font-size: 11px;
+  color: var(--text-muted);
+  text-transform: uppercase;
+  font-weight: var(--weight-semibold);
+}
+
+.input, .select {
+  background-color: var(--surface);
+  border: 1px solid var(--border);
+  color: var(--text-primary);
+  padding: 8px 12px;
+  border-radius: var(--radius-sm);
+  font-size: var(--text-body);
+}
+
+.input:focus, .select:focus {
+  border-color: var(--primary);
+}
+
+.formRow {
+  display: flex;
+  gap: var(--sp-3);
+  flex-wrap: wrap;
+}
+
+.formActions {
+  display: flex;
+  justify-content: flex-end;
+  gap: var(--sp-3);
+  padding-top: var(--sp-2);
+}
+
+.cancelBtn {
+  padding: 8px 16px;
+  color: var(--text-secondary);
+  border-radius: var(--radius-sm);
+}
+
+.cancelBtn:hover {
+  color: var(--text-primary);
+  background-color: rgba(255, 255, 255, 0.05);
+}
+
+.saveBtn {
+  padding: 8px 16px;
+  background-color: var(--primary);
+  color: white;
+  border-radius: var(--radius-sm);
+  font-weight: var(--weight-medium);
+}
+
+.saveBtn:hover {
+  background-color: var(--primary-hover);
+}
+
+@media (max-width: 640px) {
+  .chipsRow, .sourceSection, .actionRow, .editForm {
+    padding-left: 0;
+  }
+
+  .actionRow {
+    flex-direction: column;
+    align-items: stretch;
+  }
+
+  .addBtn, .editBtn, .ignoreBtn {
+    justify-content: center;
+  }
+}

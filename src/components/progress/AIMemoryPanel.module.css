@@ -1,0 +1,183 @@
+.section {
+  background-color: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: var(--radius-lg);
+  padding: var(--sp-6);
+  box-shadow: var(--shadow-card);
+  display: flex;
+  flex-direction: column;
+  gap: var(--sp-5);
+}
+
+.header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+}
+
+.titleRow {
+  display: flex;
+  align-items: center;
+  gap: var(--sp-3);
+}
+
+.title {
+  font-size: 20px;
+  font-weight: var(--weight-bold);
+  color: white;
+  margin: 0 0 2px;
+}
+
+.subtitle {
+  font-size: var(--text-small);
+  color: var(--text-secondary);
+  margin: 0;
+}
+
+.list {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+}
+
+.empty {
+  padding: var(--sp-6);
+  text-align: center;
+  color: var(--text-muted);
+  font-style: italic;
+}
+
+.row {
+  background-color: var(--surface-elevated);
+  border: 1px solid var(--border);
+  border-radius: var(--radius-md);
+  padding: var(--sp-3) var(--sp-4);
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: var(--sp-4);
+  flex-wrap: wrap;
+  transition: border-color var(--transition-fast);
+}
+
+.row:hover {
+  border-color: rgba(255, 255, 255, 0.1);
+}
+
+.text {
+  font-size: var(--text-body);
+  color: var(--text-primary);
+  font-weight: var(--weight-medium);
+}
+
+.actions {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.ghostBtn {
+  display: flex;
+  align-items: center;
+  gap: 4px;
+  background: transparent;
+  border: none;
+  color: var(--text-muted);
+  font-size: 12px;
+  padding: 4px 8px;
+  border-radius: var(--radius-sm);
+  cursor: pointer;
+  transition: all var(--transition-fast);
+}
+
+.ghostBtn:hover {
+  color: white;
+  background-color: rgba(255, 255, 255, 0.05);
+}
+
+.ghostBtnDanger {
+  display: flex;
+  align-items: center;
+  gap: 4px;
+  background: transparent;
+  border: none;
+  color: var(--text-muted);
+  font-size: 12px;
+  padding: 4px 8px;
+  border-radius: var(--radius-sm);
+  cursor: pointer;
+  transition: all var(--transition-fast);
+}
+
+.ghostBtnDanger:hover {
+  color: var(--danger);
+  background-color: var(--danger-glow);
+}
+
+/* ---- Confirmation Tooltip ---- */
+.confirmBox {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  background-color: var(--danger-glow);
+  border: 1px solid var(--danger);
+  padding: 2px 8px;
+  border-radius: var(--radius-sm);
+}
+
+.confirmText {
+  font-size: 11px;
+  font-weight: var(--weight-bold);
+  color: var(--danger);
+}
+
+.confirmYes {
+  background-color: var(--danger);
+  color: white;
+  font-size: 11px;
+  padding: 2px 8px;
+  border-radius: 2px;
+}
+
+.confirmNo {
+  color: var(--text-secondary);
+  font-size: 11px;
+  padding: 2px 6px;
+}
+
+/* ---- Edit Form ---- */
+.editForm {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  width: 100%;
+}
+
+.input {
+  flex: 1;
+  background-color: var(--surface);
+  border: 1px solid var(--primary);
+  color: white;
+  padding: 6px 10px;
+  border-radius: var(--radius-sm);
+  font-size: var(--text-body);
+}
+
+.saveBtn {
+  background-color: var(--primary);
+  color: white;
+  padding: 6px;
+  border-radius: var(--radius-sm);
+}
+
+.cancelBtn {
+  color: var(--text-muted);
+  padding: 6px;
+}
+
+@media (max-width: 640px) {
+  .row {
+    flex-direction: column;
+    align-items: flex-start;
+  }
+}

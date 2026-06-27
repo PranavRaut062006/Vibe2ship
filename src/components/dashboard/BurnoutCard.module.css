@@ -1,0 +1,155 @@
+.card {
+  background: linear-gradient(135deg, rgba(245, 158, 11, 0.12) 0%, var(--surface) 100%);
+  border: 1px solid rgba(245, 158, 11, 0.4);
+  border-radius: var(--radius-lg);
+  padding: var(--sp-6);
+  box-shadow: 0 10px 30px rgba(0, 0, 0, 0.7), 0 0 30px rgba(245, 158, 11, 0.15);
+  display: flex;
+  flex-direction: column;
+  gap: var(--sp-4);
+  margin-bottom: var(--sp-6);
+}
+
+.cardScheduled {
+  background-color: var(--surface-elevated);
+  border: 1px solid var(--accent);
+  border-radius: var(--radius-lg);
+  padding: var(--sp-4) var(--sp-6);
+  display: flex;
+  align-items: center;
+  gap: var(--sp-3);
+  color: white;
+  margin-bottom: var(--sp-6);
+}
+
+.header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+}
+
+.titleRow {
+  display: flex;
+  align-items: center;
+  gap: var(--sp-2);
+}
+
+.title {
+  font-size: 14px;
+  font-weight: var(--weight-bold);
+  color: var(--warning);
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+}
+
+.closeBtn {
+  color: var(--text-muted);
+}
+
+.closeBtn:hover {
+  color: white;
+}
+
+.content {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+}
+
+.lead {
+  font-size: 16px;
+  color: white;
+  margin: 0;
+}
+
+.sub {
+  font-size: var(--text-small);
+  color: var(--text-secondary);
+  margin: 0;
+}
+
+.optionsGrid {
+  display: grid;
+  grid-template-columns: repeat(4, 1fr);
+  gap: var(--sp-3);
+}
+
+.optBtn {
+  background-color: var(--surface-elevated);
+  border: 1px solid var(--border);
+  border-radius: var(--radius-md);
+  padding: 10px 8px;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 4px;
+  color: var(--text-primary);
+  font-size: 13px;
+  font-weight: var(--weight-medium);
+  transition: all var(--transition-fast);
+}
+
+.optBtn:hover {
+  border-color: var(--warning);
+  background-color: rgba(245, 158, 11, 0.08);
+}
+
+.optActive {
+  border-color: var(--warning);
+  background-color: rgba(245, 158, 11, 0.15);
+  color: white;
+  box-shadow: 0 0 15px rgba(245, 158, 11, 0.2);
+}
+
+.optTime {
+  font-size: 10px;
+  color: var(--text-muted);
+}
+
+.actions {
+  display: flex;
+  align-items: center;
+  gap: var(--sp-3);
+  padding-top: 4px;
+}
+
+.scheduleBtn {
+  background-color: var(--warning);
+  color: #0A0A0F;
+  padding: 10px 20px;
+  border-radius: var(--radius-md);
+  font-weight: var(--weight-bold);
+  font-size: var(--text-body);
+  transition: all var(--transition-fast);
+}
+
+.scheduleBtn:hover {
+  background-color: #FBBF24;
+  transform: scale(1.02);
+}
+
+.skipBtn {
+  color: var(--text-secondary);
+  padding: 10px 16px;
+  font-size: var(--text-body);
+}
+
+.skipBtn:hover {
+  color: white;
+}
+
+@media (max-width: 640px) {
+  .optionsGrid {
+    grid-template-columns: repeat(2, 1fr);
+  }
+
+  .actions {
+    flex-direction: column;
+    align-items: stretch;
+  }
+
+  .scheduleBtn, .skipBtn {
+    justify-content: center;
+    width: 100%;
+  }
+}

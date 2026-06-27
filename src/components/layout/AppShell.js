@@ -1,0 +1,116 @@
+'use client';
+
+import { useState, useCallback, useEffect } from 'react';
+import { useRouter, usePathname } from 'next/navigation';
+import Sidebar from './Sidebar';
+import TopBar from './TopBar';
+import MobileNav from './MobileNav';
+import FloatingAIButton from '../ui/FloatingAIButton';
+import CommandPalette from '../overlays/CommandPalette';
+import AIChatPanel from '../overlays/AIChatPanel';
+import QuickAddModal from '../overlays/QuickAddModal';
+import NotificationPanel from '../overlays/NotificationPanel';
+import AdaptiveModesModal from '../common/AdaptiveModesModal';
+import styles from './AppShell.module.css';
+
+export default function AppShell({ children }) {
+  const router = useRouter();
+  const pathname = usePathname();
+  const [sidebarCollapsed, setSidebarCollapsed] = useState(false);
+  const [commandPaletteOpen, setCommandPaletteOpen] = useState(false);
+  const [aiChatOpen, setAiChatOpen] = useState(false);
+  const [quickAddOpen, setQuickAddOpen] = useState(false);
+  const [notifOpen, setNotifOpen] = useState(false);
+  const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
+  const [modesModalOpen, setModesModalOpen] = useState(false);
+  const [currentMode, setCurrentMode] = useState('Balanced');
+
+  const activePage = pathname === '/' ? 'dashboard' : pathname.replace('/', '');
+
+  const toggleSidebar = useCallback(() => {
+    setSidebarCollapsed(prev => !prev);
+  }, []);
+
+  const navigateTo = useCallback((page) => {
+    setMobileMenuOpen(false);
+    if (page === 'dashboard') {
+      router.push('/');
+    } else {
+      router.push(`/${page}`);
+    }
+  }, [router]);
+
+  // Keyboard shortcuts
+  useEffect(() => {
+    const handleKeyDown = (e) => {
+      // Cmd+K or Ctrl+K — command palette
+      if ((e.metaKey || e.ctrlKey) && e.key === 'k') {
+        e.preventDefault();
+        setCommandPaletteOpen(prev => !prev);
+      }
+      // Escape — close overlays
+      if (e.key === 'Escape') {
+        setCommandPaletteOpen(false);
+        setAiChatOpen(false);
+        setQuickAddOpen(false);
+        setNotifOpen(false);
+      }
+    };
+    window.addEventListener('keydown', handleKeyDown);
+    return () => window.removeEventListener('keydown', handleKeyDown);
+  }, []);
+
+  return (
+    <div className={styles.shell}>
+      <Sidebar
+        collapsed={sidebarCollapsed}
+        onToggle={toggleSidebar}
+        activePage={activePage}
+        onNavigate={navigateTo}
+        currentMode={currentMode}
+        onOpenModesModal={() => setModesModalOpen(true)}
+      />
+
+      <div className={`${styles.mainWrapper} ${sidebarCollapsed ? styles.sidebarCollapsed : ''}`}>
+        <TopBar
+          onOpenCommandPalette={() => setCommandPaletteOpen(true)}
+          onOpenNotifications={() => setNotifOpen(prev => !prev)}
+          onOpenQuickAdd={() => setQuickAddOpen(true)}
+          onMobileMenu={() => setMobileMenuOpen(prev => !prev)}
+        />
+
+        <main className={styles.mainContent}>
+          {children}
+        </main>
+      </div>
+
+      <MobileNav activePage={activePage} onNavigate={navigateTo} />
+      <FloatingAIButton onClick={() => setAiChatOpen(true)} />
+
+      {/* Overlays */}
+      <CommandPalette
+        isOpen={commandPaletteOpen}
+        onClose={() => setCommandPaletteOpen(false)}
+        onNavigate={navigateTo}
+      />
+      <AIChatPanel
+        isOpen={aiChatOpen}
+        onClose={() => setAiChatOpen(false)}
+      />
+      <QuickAddModal
+        isOpen={quickAddOpen}
+        onClose={() => setQuickAddOpen(false)}
+      />
+      <NotificationPanel
+        isOpen={notifOpen}
+        onClose={() => setNotifOpen(false)}
+      />
+      <AdaptiveModesModal
+        isOpen={modesModalOpen}
+        onClose={() => setModesModalOpen(false)}
+        currentMode={currentMode}
+        onSelectMode={setCurrentMode}
+      />
+    </div>
+  );
+}
