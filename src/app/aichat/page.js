@@ -1,7 +1,7 @@
 'use client';
 
-import { useState, useEffect } from 'react';
-import { Sparkles, Paperclip, Send, Mic, Menu } from 'lucide-react';
+import { useState, useEffect, useRef } from 'react';
+import { Sparkles, Paperclip, Send, Mic, MicOff, Menu, Image as ImageIcon } from 'lucide-react';
 import ChatSidebar from '@/components/aichat/ChatSidebar';
 import MessageCard from '@/components/aichat/MessageCard';
 import { fetchChatHistory, sendChatMessage, fetchTasks } from '@/lib/api';
@@ -9,7 +9,7 @@ import styles from './page.module.css';
 
 export default function AIChatPage() {
   const [conversations, setConversations] = useState([
-    { id: 'c1', title: 'New Executive Chat', time: 'Just now' }
+    { id: 'c1', title: 'Executive Session', time: 'Active' }
   ]);
   const [activeId, setActiveId] = useState('c1');
   const [mobileSidebarOpen, setMobileSidebarOpen] = useState(false);
@@ -19,6 +19,10 @@ export default function AIChatPage() {
   const [input, setInput] = useState('');
   const [thinking, setThinking] = useState(false);
   const [attachedFile, setAttachedFile] = useState(null);
+  const [isListening, setIsListening] = useState(false);
+
+  const fileInputRef = useRef(null);
+  const messagesEndRef = useRef(null);
 
   useEffect(() => {
     async function loadInitial() {
@@ -32,7 +36,9 @@ export default function AIChatPage() {
             id: m._id || m.id,
             sender: m.role === 'user' ? 'user' : 'ai',
             text: m.content,
-            embedType: m.embedType || null,
+            proposedTasks: m.proposedTasks || [],
+            proposedScheduleBlocks: m.proposedScheduleBlocks || [],
+            approved: m.approved || false,
             actions: m.actions || []
           }));
           setMessages(formatted);
@@ -46,17 +52,21 @@ export default function AIChatPage() {
     loadInitial();
   }, []);
 
+  useEffect(() => {
+    messagesEndRef.current?.scrollIntoView({ behavior: 'smooth' });
+  }, [messages, thinking]);
+
   const chips = [
-    "📊 How am I doing today?",
-    "📅 Plan my week",
-    "⚠️ What do I risk missing?",
-    "💡 What should I do now?"
+    "📅 Plan my week based on deadlines",
+    "Every Sunday I have Leetcode Contest from 8-10am",
+    "I have an interview next Monday at 2pm",
+    "I can't follow today's schedule, rearrange my afternoon"
   ];
 
   const handleSend = async (textToSend = input) => {
     if (!textToSend.trim() && !attachedFile || thinking) return;
 
-    const fullText = attachedFile ? `[Attached Timetable: ${attachedFile.name}] ${textToSend}` : textToSend;
+    const fullText = attachedFile ? `[Attached Timetable Image: ${attachedFile.name}] ${textToSend || 'Please extract timetable and schedule.'}` : textToSend;
     const userMsg = {
       id: `m_user_${Date.now()}`,
       sender: 'user',
@@ -74,17 +84,18 @@ export default function AIChatPage() {
         id: res.assistantMessage?._id || `m_ai_${Date.now()}`,
         sender: 'ai',
         text: res.assistantMessage?.content || "I have analyzed your executive schedule.",
-        embedType: res.assistantMessage?.embedType || null,
+        proposedTasks: res.assistantMessage?.proposedTasks || [],
+        proposedScheduleBlocks: res.assistantMessage?.proposedScheduleBlocks || [],
+        approved: res.assistantMessage?.approved || false,
         actions: res.assistantMessage?.actions || []
       };
       setMessages(prev => [...prev, aiMsg]);
-      window.dispatchEvent(new CustomEvent('taskCreated'));
     } catch (err) {
       console.error("Chat error:", err);
       setMessages(prev => [...prev, {
         id: `m_err_${Date.now()}`,
         sender: 'ai',
-        text: "⚠️ Backend API error or rate limit exceeded while contacting Gemini. Please verify Express server is running."
+        text: "⚠️ Backend API error or quota exceeded while contacting Gemini. Please try again or verify settings."
       }]);
     } finally {
       setThinking(false);
@@ -93,12 +104,12 @@ export default function AIChatPage() {
 
   const handleNewChat = () => {
     const newId = `c_${Date.now()}`;
-    setConversations(prev => [{ id: newId, title: 'New Executive Chat', time: 'Just now' }, ...prev]);
+    setConversations(prev => [{ id: newId, title: 'New Executive Session', time: 'Just now' }, ...prev]);
     setActiveId(newId);
     setMessages([{
       id: `m_start_${Date.now()}`,
       sender: 'ai',
-      text: "Starting new executive consulting session. What would you like to focus on?"
+      text: "Starting new executive consulting session. How can I optimize your time today?"
     }]);
   };
 
@@ -109,13 +120,54 @@ export default function AIChatPage() {
     }
   };
 
-  const handleSimulateAttach = () => {
-    setAttachedFile({ name: 'college_timetable_semester_6.png' });
+  const handleFileChange = (e) => {
+    const file = e.target.files?.[0];
+    if (file) {
+      setAttachedFile(file);
+    }
+  };
+
+  const toggleVoiceInput = () => {
+    if (!('webkitSpeechRecognition' in window) && !('SpeechRecognition' in window)) {
+      alert('Speech recognition is not supported in this browser. Please try Chrome or Edge.');
+      return;
+    }
+
+    if (isListening) {
+      setIsListening(false);
+      return;
+    }
+
+    const SpeechRecognition = window.SpeechRecognition || window.webkitSpeechRecognition;
+    const recognition = new SpeechRecognition();
+    recognition.continuous = false;
+    recognition.interimResults = false;
+    recognition.lang = 'en-US';
+
+    recognition.onstart = () => {
+      setIsListening(true);
+    };
+
+    recognition.onresult = (event) => {
+      const transcript = event.results[0][0].transcript;
+      setInput(prev => (prev ? `${prev} ${transcript}` : transcript));
+      setIsListening(false);
+    };
+
+    recognition.onerror = (event) => {
+      console.error('Speech recognition error:', event.error);
+      setIsListening(false);
+    };
+
+    recognition.onend = () => {
+      setIsListening(false);
+    };
+
+    recognition.start();
   };
 
   return (
     <div className={styles.container}>
-      {/* Mobile Sidebar Toggle Header */}
       <div className={styles.mobileHeader}>
         <button onClick={() => setMobileSidebarOpen(true)} className={styles.mobileMenuBtn}>
           <Menu size={20} />
@@ -123,7 +175,6 @@ export default function AIChatPage() {
         </button>
       </div>
 
-      {/* Left Sidebar */}
       <div className={`${styles.sidebarWrapper} ${mobileSidebarOpen ? styles.mobileOpen : ''}`}>
         {mobileSidebarOpen && (
           <div className={styles.mobileCloseBar}>
@@ -140,28 +191,25 @@ export default function AIChatPage() {
         />
       </div>
 
-      {/* Right Chat Area */}
       <div className={styles.chatArea}>
-        {/* Top Bar */}
         <div className={styles.topBar}>
           <div className={styles.titleRow}>
             <div className={styles.readyDot} title="AI Ready" />
-            <h2 className={styles.title}>LifePilot AI Advisor</h2>
+            <h2 className={styles.title}>LifePilot AI Intelligence Hub</h2>
           </div>
           <div className={styles.contextPill}>
-            Context: {taskCount} tasks · Live Gemini 3.1 Pro
+            Context: {taskCount} tasks • Gemini 3.1 Pro (JSON Pipeline)
           </div>
         </div>
 
-        {/* Messages List Area */}
         <div className={styles.messagesList}>
           {messages.length === 0 ? (
             <div className={`${styles.onboardingState} fade-in`}>
               <div className={styles.sparklesIconWrapper}>
                 <Sparkles size={48} className="text-primary-color" />
               </div>
-              <h3>Your AI Executive Advisor</h3>
-              <p>Ask me anything about your productivity. Tell me what tasks you need to get done, and I will add them to your schedule.</p>
+              <h3>Your Autonomous Executive Companion</h3>
+              <p>Natural language scheduling, timetable image OCR, and voice commands powered by strict human-in-the-loop approval.</p>
               
               <div className={styles.onboardingChips}>
                 {chips.map((c, i) => (
@@ -177,7 +225,7 @@ export default function AIChatPage() {
                 <MessageCard
                   key={msg.id}
                   message={msg}
-                  onAction={(actLabel) => handleSend(`Execute action: ${actLabel}`)}
+                  onAction={(actLabel) => handleSend(actLabel)}
                 />
               ))}
 
@@ -188,14 +236,14 @@ export default function AIChatPage() {
                     <span className={styles.dot} />
                     <span className={styles.dot} />
                   </div>
-                  <span className={styles.thinkingText}>LifePilot AI analyzing your schedule and history...</span>
+                  <span className={styles.thinkingText}>LifePilot AI processing natural language and constructing validated JSON proposals...</span>
                 </div>
               )}
+              <div ref={messagesEndRef} />
             </>
           )}
         </div>
 
-        {/* Quick Suggestion Chips (when messages exist) */}
         {messages.length > 0 && !thinking && (
           <div className={styles.chipsRow}>
             {chips.map((c, i) => (
@@ -206,27 +254,34 @@ export default function AIChatPage() {
           </div>
         )}
 
-        {/* Sticky Input Area */}
         <div className={styles.inputArea}>
           {attachedFile && (
             <div className={styles.attachmentChip}>
-              <span>📎 Attached: {attachedFile.name}</span>
+              <ImageIcon size={14} style={{ marginRight: '6px' }} />
+              <span>Attached: {attachedFile.name}</span>
               <button onClick={() => setAttachedFile(null)}>✕</button>
             </div>
           )}
 
           <div className={styles.inputRow}>
+            <input
+              type="file"
+              ref={fileInputRef}
+              style={{ display: 'none' }}
+              accept="image/*"
+              onChange={handleFileChange}
+            />
             <button
               className={styles.iconBtn}
-              onClick={handleSimulateAttach}
-              title="Attach timetable screenshot for Vision analysis"
+              onClick={() => fileInputRef.current?.click()}
+              title="Attach Timetable Screenshot (OCR & Schedule Extraction)"
             >
               <Paperclip size={18} />
             </button>
 
             <textarea
               className={styles.textarea}
-              placeholder="Ask your AI advisor..."
+              placeholder={isListening ? "Listening... speak now" : "Plan my week, describe timetable, or ask advice..."}
               rows={1}
               value={input}
               onChange={(e) => setInput(e.target.value)}
@@ -239,11 +294,12 @@ export default function AIChatPage() {
             />
 
             <button
-              className={styles.iconBtn}
-              onClick={() => alert('Voice listening mode activated...')}
-              title="Voice Input"
+              className={`${styles.iconBtn} ${isListening ? 'text-accent' : ''}`}
+              style={{ background: isListening ? 'rgba(16, 185, 129, 0.2)' : '' }}
+              onClick={toggleVoiceInput}
+              title="Voice Input (Speech Recognition)"
             >
-              <Mic size={18} />
+              {isListening ? <MicOff size={18} color="#10b981" /> : <Mic size={18} />}
             </button>
 
             <button
@@ -256,7 +312,7 @@ export default function AIChatPage() {
           </div>
 
           <div className={styles.disclaimer}>
-            LifePilot AI has context of your tasks, schedule, and behavior
+            All AI-generated proposals require explicit user approval before writing to Firebase Firestore.
           </div>
         </div>
       </div>

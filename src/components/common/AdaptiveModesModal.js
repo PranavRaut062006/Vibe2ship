@@ -2,17 +2,19 @@
 
 import { useState } from 'react';
 import { GraduationCap, Briefcase, Heart, Scale, Check, X, Sparkles } from 'lucide-react';
+import { updateUser } from '@/lib/api';
 import styles from './AdaptiveModesModal.module.css';
 
 export default function AdaptiveModesModal({ isOpen, onClose, currentMode = 'Balanced', onSelectMode }) {
   const [selected, setSelected] = useState(currentMode);
   const [pendingMode, setPendingMode] = useState(null);
+  const [saving, setSaving] = useState(false);
 
   if (!isOpen) return null;
 
   const modes = [
     {
-      id: 'Study First',
+      id: 'Studies First',
       icon: GraduationCap,
       desc: 'Academic tasks take priority. AI schedules study blocks first.',
       preview: [
@@ -23,7 +25,7 @@ export default function AdaptiveModesModal({ isOpen, onClose, currentMode = 'Bal
       ]
     },
     {
-      id: 'Career Mode',
+      id: 'Career First',
       icon: Briefcase,
       desc: 'Meetings, interviews, and work deadlines prioritized.',
       preview: [
@@ -61,12 +63,22 @@ export default function AdaptiveModesModal({ isOpen, onClose, currentMode = 'Bal
     setPendingMode(modes.find(m => m.id === mId));
   };
 
-  const handleConfirm = () => {
+  const handleConfirm = async () => {
     if (pendingMode) {
-      setSelected(pendingMode.id);
-      if (onSelectMode) onSelectMode(pendingMode.id);
-      setPendingMode(null);
-      onClose();
+      setSaving(true);
+      try {
+        await updateUser({ productivityMode: pendingMode.id });
+        setSelected(pendingMode.id);
+        if (onSelectMode) onSelectMode(pendingMode.id);
+        window.dispatchEvent(new CustomEvent('scheduleUpdated'));
+        setPendingMode(null);
+        onClose();
+      } catch (err) {
+        console.error("Failed to update adaptive mode:", err);
+        alert("Failed to save mode selection.");
+      } finally {
+        setSaving(false);
+      }
     }
   };
 
@@ -76,10 +88,10 @@ export default function AdaptiveModesModal({ isOpen, onClose, currentMode = 'Bal
         <div className={styles.header}>
           <div className={styles.titleRow}>
             <Sparkles size={20} className="text-primary-color" />
-            <h3 className={styles.title}>Productivity Mode</h3>
+            <h3 className={styles.title}>Adaptive Productivity Mode</h3>
           </div>
           <div className={styles.activePill}>Active: {selected}</div>
-          <button className={styles.closeBtn} onClick={onClose}><X size={18} /></button>
+          <button className={styles.closeBtn} onClick={onClose} disabled={saving}><X size={18} /></button>
         </div>
 
         <div className={styles.grid}>
@@ -106,7 +118,6 @@ export default function AdaptiveModesModal({ isOpen, onClose, currentMode = 'Bal
           })}
         </div>
 
-        {/* Priority Preview Confirmation Box */}
         {pendingMode && (
           <div className={`${styles.previewBox} slide-up`}>
             <div className={styles.previewHeader}>
@@ -119,10 +130,10 @@ export default function AdaptiveModesModal({ isOpen, onClose, currentMode = 'Bal
             </ul>
 
             <div className={styles.previewActions}>
-              <button className={styles.cancelBtn} onClick={() => setPendingMode(null)}>Cancel</button>
-              <button className={styles.confirmBtn} onClick={handleConfirm}>
+              <button className={styles.cancelBtn} onClick={() => setPendingMode(null)} disabled={saving}>Cancel</button>
+              <button className={styles.confirmBtn} onClick={handleConfirm} disabled={saving}>
                 <Check size={16} />
-                <span>Confirm Switch</span>
+                <span>{saving ? 'Saving Mode...' : 'Confirm Switch'}</span>
               </button>
             </div>
           </div>

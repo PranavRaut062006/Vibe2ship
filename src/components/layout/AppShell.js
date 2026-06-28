@@ -11,6 +11,7 @@ import AIChatPanel from '../overlays/AIChatPanel';
 import QuickAddModal from '../overlays/QuickAddModal';
 import NotificationPanel from '../overlays/NotificationPanel';
 import AdaptiveModesModal from '../common/AdaptiveModesModal';
+import { fetchUser } from '@/lib/api';
 import styles from './AppShell.module.css';
 
 export default function AppShell({ children }) {
@@ -24,6 +25,14 @@ export default function AppShell({ children }) {
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
   const [modesModalOpen, setModesModalOpen] = useState(false);
   const [currentMode, setCurrentMode] = useState('Balanced');
+
+  useEffect(() => {
+    fetchUser().then(res => {
+      if (res && res.user && res.user.productivityMode) {
+        setCurrentMode(res.user.productivityMode);
+      }
+    }).catch(err => console.error(err));
+  }, []);
 
   const activePage = pathname === '/' ? 'dashboard' : pathname.replace('/', '');
 

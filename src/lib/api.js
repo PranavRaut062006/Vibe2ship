@@ -39,11 +39,13 @@ export const updateScheduleBlocks = (date = 'today', blocks) => request(`/api/sc
 
 // Inbox
 export const scanInboxEmail = (emailText) => request('/api/inbox/scan', { method: 'POST', body: JSON.stringify({ emailText }) });
-export const approveInboxTask = (taskId) => request(`/api/inbox/approve/${taskId}`, { method: 'POST' });
+export const saveApprovedInboxTasks = (tasks) => request('/api/inbox/save-approved', { method: 'POST', body: JSON.stringify({ tasks }) });
+export const extractTimetableImage = (imageBase64, mimeType) => request('/api/schedule/extract-image', { method: 'POST', body: JSON.stringify({ imageBase64, mimeType }) });
 
 // Chat
 export const fetchChatHistory = () => request('/api/chat/history');
 export const sendChatMessage = (content) => request('/api/chat', { method: 'POST', body: JSON.stringify({ content }) });
+export const approveChatProposals = (messageId) => request(`/api/chat/approve/${messageId}`, { method: 'POST' });
 
 // User & Memory
 export const fetchUser = () => request('/api/user');
@@ -63,4 +65,16 @@ export const fetchHabits = () => request('/api/habits');
 export const createHabit = (data) => request('/api/habits', { method: 'POST', body: JSON.stringify(data) });
 export const updateHabit = (id, data) => request(`/api/habits/${id}`, { method: 'PUT', body: JSON.stringify(data) });
 export const deleteHabit = (id) => request(`/api/habits/${id}`, { method: 'DELETE' });
+
+// Insights & Consistency
+export const fetchInsights = () => request('/api/insights');
+
+// Notifications
+export const fetchNotifications = () => request('/api/notifications');
+export const resolveNotification = (id) => request(`/api/notifications/${id}/resolve`, { method: 'POST' });
+
+// Phase 4 Schedule AI Intelligence (Burnout, Dynamic Replan, Recovery)
+export const checkScheduleBurnout = (date = 'today') => request(`/api/schedule/${date}/burnout`);
+export const triggerDynamicReplan = (date = 'today', reason) => request(`/api/schedule/${date}/replan-dynamic`, { method: 'POST', body: JSON.stringify({ reason }) });
+export const generateRecoveryPlans = () => request('/api/schedule/recovery-plans', { method: 'POST' });
 

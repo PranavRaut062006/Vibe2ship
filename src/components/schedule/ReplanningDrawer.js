@@ -1,27 +1,52 @@
 'use client';
 
-import { useState } from 'react';
-import { Sparkles, X, ArrowRight, Check } from 'lucide-react';
-import { replanSchedule } from '@/lib/api';
+import { useState, useEffect } from 'react';
+import { Sparkles, X, Clock, Check, AlertCircle, RefreshCw } from 'lucide-react';
+import { triggerDynamicReplan, updateScheduleBlocks } from '@/lib/api';
 import styles from './ReplanningDrawer.module.css';
 
-export default function ReplanningDrawer({ isOpen, onClose, onAccept }) {
-  const [loading, setLoading] = useState(false);
+export default function ReplanningDrawer({ isOpen, onClose, delayedTask, onConfirmReplan }) {
+  const [loading, setLoading] = useState(true);
+  const [summary, setSummary] = useState('');
+  const [proposedBlocks, setProposedBlocks] = useState([]);
+  const [saving, setSaving] = useState(false);
+
+  useEffect(() => {
+    if (!isOpen) return;
+    async function getProposals() {
+      setLoading(true);
+      try {
+        const reason = delayedTask ? `Delay in ${delayedTask.title || 'Task'}` : "User requested dynamic schedule re-optimization";
+        const res = await triggerDynamicReplan('today', reason);
+        if (res) {
+          setSummary(res.summary || "AI dynamically shifted blocks to protect priority items.");
+          setProposedBlocks(res.proposedBlocks || []);
+        }
+      } catch (err) {
+        console.error("Failed to generate dynamic replan:", err);
+        setSummary("Failed to generate dynamic schedule optimization.");
+      } finally {
+        setLoading(false);
+      }
+    }
+    getProposals();
+  }, [isOpen, delayedTask]);
 
   if (!isOpen) return null;
 
-  const handleAcceptChanges = async () => {
-    setLoading(true);
+  const handleApproveSave = async () => {
+    if (proposedBlocks.length === 0) return;
+    setSaving(true);
     try {
-      await replanSchedule({ title: 'DSA Practice' }, 'Task marked as incomplete or took longer than expected');
+      await updateScheduleBlocks('today', proposedBlocks);
       window.dispatchEvent(new CustomEvent('scheduleUpdated'));
-      if (onAccept) onAccept();
+      if (onConfirmReplan) onConfirmReplan(proposedBlocks);
       onClose();
     } catch (err) {
-      console.error("Failed to execute AI replan:", err);
-      onClose();
+      console.error("Failed to save replanned schedule:", err);
+      alert("Failed to save schedule to Firebase.");
     } finally {
-      setLoading(false);
+      setSaving(false);
     }
   };
 
@@ -31,48 +56,64 @@ export default function ReplanningDrawer({ isOpen, onClose, onAccept }) {
         <div className={styles.header}>
           <div className={styles.titleRow}>
             <Sparkles size={20} className="text-primary-color" />
-            <h3 className={styles.title}>AI Updated Your Schedule</h3>
+            <h3 className={styles.title}>AI Dynamic Replanning (Preview)</h3>
           </div>
-          <button className={styles.closeBtn} onClick={onClose} disabled={loading}>
+          <button className={styles.closeBtn} onClick={onClose} disabled={saving}>
             <X size={18} />
           </button>
         </div>
 
         <p className={styles.subtitle}>
-          A schedule change or delay occurred. LifePilot AI dynamically re-optimized downstream blocks to protect your high-priority items without causing burnout.
+          Strict Human-in-the-Loop Governance: LifePilot AI calculated a new schedule to accommodate unexpected delays or mode changes. Review proposals and reasoning before saving.
         </p>
 
-        <div className={styles.changesList}>
-          <div className={`${styles.changeCard} ${styles.moved}`}>
-            <span className={styles.changeBadgeMoved}>Moved</span>
-            <div className={styles.changeContent}>
-              <strong>DSA Practice</strong>
-              <span>→ Rescheduled to afternoon focus block</span>
-            </div>
+        {loading ? (
+          <div style={{ padding: '60px 20px', textAlign: 'center', color: '#c084fc' }}>
+            <RefreshCw size={36} className="spin" style={{ margin: '0 auto 16px', display: 'block' }} />
+            <h4>Gemini analyzing biological pacing & priorities...</h4>
+            <p style={{ fontSize: '13px', color: 'var(--text-muted)' }}>Calculating downstream shifts without overwriting your current data.</p>
           </div>
+        ) : (
+          <>
+            <div style={{ background: 'rgba(108, 99, 255, 0.1)', border: '1px solid rgba(108, 99, 255, 0.3)', padding: '14px', borderRadius: '10px', fontSize: '14px', color: '#fff', marginBottom: '20px' }}>
+              💡 <strong>Executive Summary:</strong> {summary}
+            </div>
 
-          <div className={`${styles.changeCard} ${styles.added}`}>
-            <span className={styles.changeBadgeAdded}>Added</span>
-            <div className={styles.changeContent}>
-              <strong>Recovery Buffer</strong>
-              <span>→ 15 min mental rest buffer</span>
+            <div className={styles.changesList} style={{ maxHeight: '50vh', overflowY: 'auto' }}>
+              {proposedBlocks.length === 0 ? (
+                <div style={{ padding: '20px', textAlign: 'center', color: 'var(--text-muted)' }}>No changes proposed.</div>
+              ) : (
+                proposedBlocks.map((b, idx) => (
+                  <div key={idx} style={{ background: 'var(--bg-card)', border: '1px solid var(--border-color)', borderRadius: '10px', padding: '14px', marginBottom: '10px' }}>
+                    <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '6px' }}>
+                      <span style={{ fontWeight: 600, fontSize: '15px', color: '#fff' }}>{b.title}</span>
+                      <span style={{ fontSize: '12px', background: 'rgba(255,255,255,0.05)', padding: '2px 8px', borderRadius: '4px', color: '#c084fc' }}>
+                        <Clock size={12} style={{ display: 'inline', marginRight: '4px' }} />
+                        {b.startTime} – {b.endTime}
+                      </span>
+                    </div>
+                    {b.why && (
+                      <div style={{ fontSize: '12px', color: '#34d399', background: 'rgba(52, 211, 153, 0.08)', padding: '6px 10px', borderRadius: '6px', marginTop: '6px' }}>
+                        🧠 <strong>AI Decision Reasoning:</strong> {b.why}
+                      </div>
+                    )}
+                  </div>
+                ))
+              )}
             </div>
-          </div>
-
-          <div className={`${styles.changeCard} ${styles.removed}`}>
-            <span className={styles.changeBadgeRemoved}>Shifted</span>
-            <div className={styles.changeContent}>
-              <strong>Team Meeting</strong>
-              <span>→ Shifted by 30 mins to avoid bottleneck</span>
-            </div>
-          </div>
-        </div>
+          </>
+        )}
 
         <div className={styles.footer}>
-          <button className={styles.rejectBtn} onClick={onClose} disabled={loading}>Keep Original</button>
-          <button className={styles.acceptBtn} onClick={handleAcceptChanges} disabled={loading}>
+          <button className={styles.rejectBtn} onClick={onClose} disabled={saving}>Discard Changes</button>
+          <button
+            className={styles.acceptBtn}
+            onClick={handleApproveSave}
+            disabled={saving || loading || proposedBlocks.length === 0}
+            style={{ background: 'var(--primary-color)', color: '#fff', border: 'none', padding: '10px 20px', borderRadius: '8px', fontWeight: 600, cursor: 'pointer', display: 'flex', alignItems: 'center', gap: '8px' }}
+          >
             <Check size={16} />
-            <span>{loading ? 'Applying AI Replan...' : 'Accept AI Changes'}</span>
+            <span>{saving ? 'Saving to Firebase...' : 'Approve & Save AI Replan'}</span>
           </button>
         </div>
       </div>
