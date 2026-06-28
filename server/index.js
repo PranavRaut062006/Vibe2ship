@@ -18,6 +18,7 @@ import inboxRouter from './routes/inbox.js';
 import chatRouter from './routes/chat.js';
 import userRouter from './routes/user.js';
 import memoryRouter from './routes/memory.js';
+import goalsHabitsRouter from './routes/goalsHabits.js';
 
 const app = express();
 const PORT = process.env.PORT || 5000;
@@ -76,6 +77,7 @@ app.use('/api/inbox', inboxRouter);
 app.use('/api/chat', chatRouter);
 app.use('/api/user', userRouter);
 app.use('/api/memory', memoryRouter);
+app.use('/api', goalsHabitsRouter);
 
 // Health Check
 app.get('/api/health', (req, res) => {

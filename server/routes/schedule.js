@@ -106,4 +106,21 @@ router.put('/replan', async (req, res) => {
   }
 });
 
+// PUT manually update blocks (for calendar drag/drop/resize/edit)
+router.put('/:date/blocks', async (req, res) => {
+  try {
+    const date = req.params.date === 'today' ? new Date().toISOString().split('T')[0] : req.params.date;
+    const { blocks } = req.body;
+    
+    const docRef = db.collection('schedules').doc(date);
+    await docRef.set({ date, blocks: Array.isArray(blocks) ? blocks : [] }, { merge: true });
+    
+    const updatedDoc = await docRef.get();
+    res.json({ schedule: { _id: updatedDoc.id, id: updatedDoc.id, ...updatedDoc.data() } });
+  } catch (error) {
+    console.error("PUT /api/schedule/:date/blocks error:", error);
+    res.status(500).json({ error: "Failed to update calendar blocks" });
+  }
+});
+
 export default router;

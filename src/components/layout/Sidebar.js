@@ -1,7 +1,7 @@
 'use client';
 
 import { useState, useEffect } from 'react';
-import { Zap, Home, Calendar, Mail, Clock, MessageSquare, BarChart2, Settings, ChevronLeft, ChevronRight, TrendingUp } from 'lucide-react';
+import { Zap, Home, Calendar, Mail, Clock, CheckSquare, Target, MessageSquare, BarChart2, Settings, ChevronLeft, ChevronRight, TrendingUp } from 'lucide-react';
 import { fetchUser } from '@/lib/api';
 import styles from './Sidebar.module.css';
 
@@ -27,9 +27,11 @@ export default function Sidebar({ collapsed, onToggle, activePage, onNavigate, c
 
   const navItems = [
     { id: 'dashboard', label: 'Dashboard', icon: Home },
-    { id: 'today', label: 'Today', icon: Calendar },
+    { id: 'planner', label: 'Planner', icon: CheckSquare },
+    { id: 'schedule', label: 'Calendar', icon: Calendar },
+    { id: 'goals', label: 'Goals & Habits', icon: Target },
+    { id: 'today', label: 'Today', icon: Clock },
     { id: 'inbox', label: 'Inbox', icon: Mail },
-    { id: 'schedule', label: 'Schedule', icon: Clock },
     { id: 'aichat', label: 'AI Chat', icon: MessageSquare, isAi: true },
     { id: 'progress', label: 'Progress', icon: BarChart2 },
   ];

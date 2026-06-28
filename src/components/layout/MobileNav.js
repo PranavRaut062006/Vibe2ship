@@ -1,15 +1,15 @@
 'use client';
 
-import { Home, Calendar, Mail, MessageSquare, User } from 'lucide-react';
+import { Home, Calendar, CheckSquare, Target, MessageSquare, User } from 'lucide-react';
 import styles from './MobileNav.module.css';
 
 export default function MobileNav({ activePage, onNavigate }) {
   const navItems = [
     { id: 'dashboard', label: 'Dashboard', icon: Home },
-    { id: 'today', label: 'Today', icon: Calendar },
-    { id: 'inbox', label: 'Inbox', icon: Mail },
+    { id: 'planner', label: 'Planner', icon: CheckSquare },
+    { id: 'schedule', label: 'Calendar', icon: Calendar },
+    { id: 'goals', label: 'Goals', icon: Target },
     { id: 'aichat', label: 'Chat', icon: MessageSquare, isAi: true },
-    { id: 'settings', label: 'Profile', icon: User },
   ];
 
   return (
