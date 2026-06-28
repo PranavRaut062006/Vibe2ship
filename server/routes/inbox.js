@@ -42,7 +42,7 @@ router.post('/scan', async (req, res) => {
     res.json({ extractedTasks: createdTasks });
   } catch (error) {
     console.error("POST /api/inbox/scan error:", error);
-    res.status(500).json({ error: "Failed to scan email text" });
+    res.status(error.code === 'QUOTA_EXCEEDED' ? 429 : 500).json({ error: error.error || "Failed to scan email text", code: error.code || "SCAN_FAILED" });
   }
 });
 

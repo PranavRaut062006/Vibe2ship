@@ -55,7 +55,7 @@ export default function OnboardingPage() {
       <div className={styles.topBar}>
         <div className={styles.logo}>
           <Zap size={20} className="text-primary-color" />
-          <span>FocusFlow<strong>AI</strong></span>
+          <span>LifePilot<strong>AI</strong></span>
         </div>
         <div className={styles.progressTrack}>
           <div className={styles.progressFill} style={{ width: `${(step / 5) * 100}%` }} />
@@ -70,7 +70,7 @@ export default function OnboardingPage() {
             <div className={styles.heroIconBox}>
               <Sparkles size={48} className="text-primary-color" />
             </div>
-            <h1 className={styles.headingXL}>Meet FocusFlow AI</h1>
+            <h1 className={styles.headingXL}>Meet LifePilot AI</h1>
             <p className={styles.subtext}>
               Not a to-do app. An autonomous executive intelligence companion that discovers work, learns your habits, predicts risks, and replans automatically.
             </p>
@@ -218,16 +218,16 @@ export default function OnboardingPage() {
             </div>
             <h1 className={styles.headingXL}>Your Executive Assistant is Ready</h1>
             <p className={styles.subtext}>
-              We&apos;ve configured FocusFlow AI for your <strong>{role}</strong> workflow.
+              We&apos;ve configured LifePilot AI for your <strong>{role}</strong> workflow.
             </p>
 
             <div className={styles.summaryCard}>
               <h4>AI Knowledge Summary</h4>
               <ul>
-                <li>📧 Extracted <strong>14 actionable tasks</strong> from Gmail & syllabi</li>
-                <li>📅 Mapped <strong>3 recurring lectures & meetings</strong></li>
-                <li>⚡ Identified peak biological focus window: <strong>9 AM – 11 AM</strong></li>
-                <li>🛡️ Protected <strong>2 hours of uninterrupted focus</strong> daily</li>
+                <li>📧 Ready to extract tasks securely from connected Gmail</li>
+                <li>📅 Optimized to schedule around your calendar events</li>
+                <li>⚡ Adaptive biological focus tracking activated</li>
+                <li>🛡️ Burnout detection and active recovery planning enabled</li>
               </ul>
             </div>
 

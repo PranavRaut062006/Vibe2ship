@@ -107,7 +107,7 @@ router.post('/', async (req, res) => {
     });
   } catch (error) {
     console.error("POST /api/chat error:", error);
-    res.status(500).json({ error: "Failed to process chat message" });
+    res.status(error.code === 'QUOTA_EXCEEDED' ? 429 : 500).json({ error: error.error || error.message || "Failed to process chat message", code: error.code || "CHAT_FAILED" });
   }
 });
 

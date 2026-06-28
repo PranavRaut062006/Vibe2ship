@@ -1,17 +1,45 @@
 'use client';
 
+import { useState, useEffect } from 'react';
 import { Zap, Home, Calendar, Mail, Clock, MessageSquare, BarChart2, Settings, ChevronLeft, ChevronRight, TrendingUp } from 'lucide-react';
+import { fetchUser } from '@/lib/api';
 import styles from './Sidebar.module.css';
 
 export default function Sidebar({ collapsed, onToggle, activePage, onNavigate, currentMode = 'Balanced', onOpenModesModal }) {
+  const [userProfile, setUserProfile] = useState({ name: 'New User', consistencyScore: 0 });
+
+  useEffect(() => {
+    async function getProfile() {
+      try {
+        const res = await fetchUser();
+        if (res.user) {
+          setUserProfile({
+            name: res.user.name || 'New User',
+            consistencyScore: res.user.consistencyScore || 0
+          });
+        }
+      } catch (err) {
+        console.error("Failed to load user in sidebar:", err);
+      }
+    }
+    getProfile();
+  }, []);
+
   const navItems = [
     { id: 'dashboard', label: 'Dashboard', icon: Home },
     { id: 'today', label: 'Today', icon: Calendar },
-    { id: 'inbox', label: 'Inbox', icon: Mail, badge: 5 },
+    { id: 'inbox', label: 'Inbox', icon: Mail },
     { id: 'schedule', label: 'Schedule', icon: Clock },
     { id: 'aichat', label: 'AI Chat', icon: MessageSquare, isAi: true },
     { id: 'progress', label: 'Progress', icon: BarChart2 },
   ];
+
+  const getInitials = (name) => {
+    if (!name) return 'NU';
+    const parts = name.trim().split(' ');
+    if (parts.length >= 2) return (parts[0][0] + parts[1][0]).toUpperCase();
+    return name.substring(0, 2).toUpperCase();
+  };
 
   return (
     <aside className={`${styles.sidebar} ${collapsed ? styles.collapsed : ''}`}>
@@ -23,7 +51,7 @@ export default function Sidebar({ collapsed, onToggle, activePage, onNavigate, c
           </div>
           {!collapsed && (
             <span className={styles.logoText}>
-              FocusFlow<span className={styles.logoAi}>AI</span>
+              LifePilot<span className={styles.logoAi}>AI</span>
             </span>
           )}
         </div>
@@ -84,12 +112,12 @@ export default function Sidebar({ collapsed, onToggle, activePage, onNavigate, c
         )}
 
         <div className={styles.userInfo}>
-          <div className={styles.avatar}>PR</div>
+          <div className={styles.avatar}>{getInitials(userProfile.name)}</div>
           {!collapsed && (
             <div className={styles.userDetails}>
-              <span className={styles.userName}>Pranav R.</span>
+              <span className={styles.userName}>{userProfile.name}</span>
               <div className={styles.consistencyPill}>
-                <span className="mono">87</span>
+                <span className="mono">{userProfile.consistencyScore}</span>
                 <TrendingUp size={12} className={styles.trendIcon} />
               </div>
             </div>

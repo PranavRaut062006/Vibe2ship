@@ -68,7 +68,7 @@ router.post('/generate', async (req, res) => {
     res.json({ schedule: updatedSchedule });
   } catch (error) {
     console.error("POST /api/schedule/generate error:", error);
-    res.status(500).json({ error: "Failed to generate schedule" });
+    res.status(error.code === 'QUOTA_EXCEEDED' ? 429 : 500).json({ error: error.error || "Failed to generate schedule", code: error.code || "GENERATE_FAILED" });
   }
 });
 
@@ -102,7 +102,7 @@ router.put('/replan', async (req, res) => {
     });
   } catch (error) {
     console.error("PUT /api/schedule/replan error:", error);
-    res.status(500).json({ error: "Failed to replan schedule" });
+    res.status(error.code === 'QUOTA_EXCEEDED' ? 429 : 500).json({ error: error.error || "Failed to replan schedule", code: error.code || "REPLAN_FAILED" });
   }
 });
 

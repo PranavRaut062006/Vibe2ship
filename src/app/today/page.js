@@ -1,7 +1,7 @@
 import SchedulePage from '../schedule/page';
 
 export const metadata = {
-  title: 'Today — FocusFlow AI',
+  title: 'Today — LifePilot AI',
   description: 'Your executive schedule and priority timeline for today.'
 };
 

@@ -1,18 +1,37 @@
 'use client';
 
+import { useState, useEffect } from 'react';
 import { Trophy, Zap, BookOpen, Lock, ShieldCheck, Flame, Star, Award } from 'lucide-react';
+import { fetchUser, fetchTasks } from '@/lib/api';
 import styles from './AchievementBadges.module.css';
 
 export default function AchievementBadges() {
+  const [streak, setStreak] = useState(0);
+  const [completedCount, setCompletedCount] = useState(0);
+
+  useEffect(() => {
+    async function load() {
+      try {
+        const uRes = await fetchUser();
+        const tRes = await fetchTasks();
+        if (uRes.user) setStreak(uRes.user.streak || 0);
+        if (tRes.tasks) setCompletedCount(tRes.tasks.filter(t => t.status === 'completed').length);
+      } catch (err) {
+        console.error("Failed to load achievement badges:", err);
+      }
+    }
+    load();
+  }, []);
+
   const badges = [
-    { id: 'b1', icon: Trophy, title: '12-Day Streak', date: 'Earned today', earned: true, recent: true },
-    { id: 'b2', icon: Zap, title: 'Deadline Master', date: 'Earned 5 days ago', earned: true },
-    { id: 'b3', icon: BookOpen, title: 'Study Beast', date: 'Earned 2 weeks ago', earned: true },
-    { id: 'b4', icon: ShieldCheck, title: 'Inbox Zero AI', date: 'Earned 3 weeks ago', earned: true },
-    { id: 'b5', icon: Flame, title: 'Deep Focus 100h', date: 'Locked · 82/100 hrs', earned: false },
-    { id: 'b6', icon: Star, title: 'Perfect Sprint', date: 'Locked · Complete 10 P1s', earned: false },
-    { id: 'b7', icon: Award, title: 'Early Riser 7am', date: 'Locked · 3/5 mornings', earned: false },
-    { id: 'b8', icon: Lock, title: 'Zen Master', date: 'Locked · Take all breaks', earned: false }
+    { id: 'b1', icon: Trophy, title: '3-Day Streak', date: streak >= 3 ? 'Unlocked!' : `Locked · ${streak}/3 days`, earned: streak >= 3, recent: streak >= 3 },
+    { id: 'b2', icon: Zap, title: 'Execution Starter', date: completedCount >= 1 ? 'Unlocked!' : 'Locked · Complete 1 task', earned: completedCount >= 1 },
+    { id: 'b3', icon: BookOpen, title: 'Task Master', date: completedCount >= 10 ? 'Unlocked!' : `Locked · ${completedCount}/10 tasks`, earned: completedCount >= 10 },
+    { id: 'b4', icon: ShieldCheck, title: 'Consistent Pilot', date: streak >= 7 ? 'Unlocked!' : `Locked · ${streak}/7 days`, earned: streak >= 7 },
+    { id: 'b5', icon: Flame, title: 'Deep Focus 50h', date: 'Locked · Complete focus sessions', earned: false },
+    { id: 'b6', icon: Star, title: 'Perfect Sprint', date: 'Locked · Complete 5 P1 tasks', earned: false },
+    { id: 'b7', icon: Award, title: 'Early Riser', date: 'Locked · Schedule morning focus', earned: false },
+    { id: 'b8', icon: Lock, title: 'Zen Master', date: 'Locked · Take scheduled breaks', earned: false }
   ];
 
   return (

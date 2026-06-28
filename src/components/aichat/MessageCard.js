@@ -20,7 +20,7 @@ export default function MessageCard({ message, onAction }) {
     <div className={`${styles.aiRow} fade-in`}>
       <div className={styles.aiHeader}>
         <Sparkles size={14} className="text-primary-color" />
-        <span className={styles.aiLabel}>FocusFlow AI</span>
+        <span className={styles.aiLabel}>LifePilot AI</span>
       </div>
 
       <div className={styles.aiCard}>
@@ -32,20 +32,11 @@ export default function MessageCard({ message, onAction }) {
             <div className={styles.embedHeader}>Progress Breakdown</div>
             <div className={styles.statRow}>
               <span>Completed</span>
-              <span className="mono">3/8 tasks (38%)</span>
+              <span className="mono">{message.data?.completed || 'Live task metrics tracking'}</span>
             </div>
-            <div className={styles.statBarTrack}><div className={styles.statBarFill} style={{ width: '38%' }} /></div>
-
-            <div className={styles.statRow}>
-              <span>Time Used</span>
-              <span className="mono">5.5/8 hrs (68%)</span>
-            </div>
-            <div className={styles.statBarTrack}><div className={styles.statBarFillWarning} style={{ width: '68%' }} /></div>
-
-            <div className={styles.statRow}>
-              <span>On Track</span>
-              <span className="text-danger font-bold">No (34% behind pace)</span>
-            </div>
+            {message.data?.percent !== undefined && (
+              <div className={styles.statBarTrack}><div className={styles.statBarFill} style={{ width: `${message.data.percent}%` }} /></div>
+            )}
           </div>
         )}
 

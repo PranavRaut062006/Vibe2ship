@@ -2,27 +2,43 @@ import { GoogleGenAI } from '@google/genai';
 
 const getAI = () => {
   const apiKey = process.env.GEMINI_API_KEY || process.env.NEXT_PUBLIC_GEMINI_API_KEY;
-  if (!apiKey) {
-    console.warn("⚠️ GEMINI_API_KEY is not set in environment.");
+  if (!apiKey || apiKey === 'dummy-key' || apiKey === 'AIzaSyYourActualAPIKeyHere') {
+    const err = new Error("GEMINI_API_KEY is missing or invalid in environment configuration.");
+    err.code = "KEY_INVALID";
+    throw err;
   }
-  return new GoogleGenAI({ apiKey: apiKey || 'dummy-key' });
+  return new GoogleGenAI({ apiKey });
+};
+
+// Helper to format Gemini API errors
+const formatGeminiError = (error) => {
+  console.error("Gemini API Error:", error);
+  const msg = error?.message || String(error);
+  if (msg.includes('429') || msg.toLowerCase().includes('quota') || msg.toLowerCase().includes('exhausted')) {
+    return { error: "Google Gemini API quota exceeded (429). Please try again later or verify billing.", code: "QUOTA_EXCEEDED" };
+  }
+  if (msg.includes('400') || msg.includes('403') || msg.toLowerCase().includes('key') || error?.code === "KEY_INVALID") {
+    return { error: "Invalid Google Gemini API Key. Please verify your key in .env.local or Settings.", code: "KEY_INVALID" };
+  }
+  return { error: `Gemini processing failed: ${msg}`, code: "GENERAL_ERROR" };
 };
 
 // Helper to strip markdown code fences from LLM JSON responses
-const cleanAndParseJSON = (text, fallback) => {
+const cleanAndParseJSON = (text) => {
   try {
     const cleaned = text.replace(/```json\n?/g, '').replace(/```\n?/g, '').trim();
     return JSON.parse(cleaned);
   } catch (err) {
     console.error("Failed to parse Gemini JSON output:", text);
-    return fallback;
+    throw new Error("Invalid JSON returned from AI model.");
   }
 };
 
 export async function extractTasksFromEmail(emailText) {
   try {
+    if (!emailText || !emailText.trim()) return [];
     const ai = getAI();
-    const prompt = `You are FocusFlow AI executive assistant. Analyze the following email/text and extract all actionable tasks, project deliverables, or calendar deadlines.
+    const prompt = `You are LifePilot AI executive assistant. Analyze the following email/text and extract all actionable tasks, project deliverables, or calendar deadlines.
 Return ONLY valid JSON array with objects matching this exact schema:
 [
   {
@@ -43,17 +59,18 @@ ${emailText}`;
       contents: prompt
     });
 
-    return cleanAndParseJSON(response.text, []);
+    return cleanAndParseJSON(response.text);
   } catch (error) {
-    console.error("Error in extractTasksFromEmail:", error);
-    return [];
+    const formatted = formatGeminiError(error);
+    throw formatted;
   }
 }
 
 export async function generateSchedule(tasks, userMemory, date) {
   try {
+    if (!tasks || tasks.length === 0) return [];
     const ai = getAI();
-    const prompt = `You are FocusFlow AI executive scheduler. Create an optimized day schedule for date: ${date}.
+    const prompt = `You are LifePilot AI executive scheduler. Create an optimized day schedule for date: ${date}.
 Here are the user's pending tasks: ${JSON.stringify(tasks)}
 Here are the user's learned preferences and peak hours: ${JSON.stringify(userMemory)}
 
@@ -74,18 +91,20 @@ Return ONLY valid JSON array representing the schedule blocks matching this exac
       contents: prompt
     });
 
-    if (!tasks || tasks.length === 0) return [];
-    return cleanAndParseJSON(response.text, []);
+    return cleanAndParseJSON(response.text);
   } catch (error) {
-    console.error("Error in generateSchedule:", error);
-    return [];
+    const formatted = formatGeminiError(error);
+    throw formatted;
   }
 }
 
 export async function replanSchedule(currentSchedule, delayedTask, reason) {
   try {
+    if (!currentSchedule || currentSchedule.length === 0) {
+      return { explanation: "No active schedule blocks available to replan.", blocks: [] };
+    }
     const ai = getAI();
-    const prompt = `You are FocusFlow AI autonomous replanning engine. A unexpected delay occurred!
+    const prompt = `You are LifePilot AI autonomous replanning engine. An unexpected delay occurred!
 Current Schedule: ${JSON.stringify(currentSchedule)}
 Delayed Task / Change: ${JSON.stringify(delayedTask)}
 Reason for delay: ${reason}
@@ -93,7 +112,7 @@ Reason for delay: ${reason}
 Dynamically shift downstream blocks to protect high priority items while avoiding burnout bottlenecks.
 Return ONLY valid JSON object with this schema:
 {
-  "explanation": "Executive explanation of how AI rearranged the afternoon",
+  "explanation": "Executive explanation of how AI rearranged the schedule",
   "blocks": [ updated array of schedule block objects with startTime, endTime, type, title, taskId ]
 }`;
 
@@ -102,24 +121,18 @@ Return ONLY valid JSON object with this schema:
       contents: prompt
     });
 
-    return cleanAndParseJSON(response.text, {
-      explanation: `Automatically shifted downstream meetings by 45 minutes to accommodate delayed work on ${delayedTask?.title || 'task'}. Added 15m buffer.`,
-      blocks: currentSchedule
-    });
+    return cleanAndParseJSON(response.text);
   } catch (error) {
-    console.error("Error in replanSchedule:", error);
-    return {
-      explanation: "AI rescheduled afternoon focus blocks to absorb the unexpected delay.",
-      blocks: currentSchedule
-    };
+    const formatted = formatGeminiError(error);
+    throw formatted;
   }
 }
 
 export async function chatWithAI(messages, userContext) {
   try {
     const ai = getAI();
-    const conversationHistory = messages.map(m => `${m.role === 'user' ? 'User' : 'FocusFlow AI'}: ${m.content}`).join('\n');
-    const prompt = `You are FocusFlow AI, an intelligent executive productivity companion.
+    const conversationHistory = messages.map(m => `${m.role === 'user' ? 'User' : 'LifePilot AI'}: ${m.content}`).join('\n');
+    const prompt = `You are LifePilot AI, an intelligent executive productivity companion.
 User Context:
 - Pending Tasks: ${JSON.stringify(userContext?.tasks || [])}
 - Today Schedule: ${JSON.stringify(userContext?.todaySchedule || [])}
@@ -144,16 +157,12 @@ Return ONLY valid JSON object with this schema:
       contents: prompt
     });
 
-    return cleanAndParseJSON(response.text, {
-      content: "I have analyzed your executive priorities. How can I assist you with your schedule today?",
-      embedType: null,
-      actions: []
-    });
+    return cleanAndParseJSON(response.text);
   } catch (error) {
-    console.error("Error in chatWithAI:", error);
+    const formatted = formatGeminiError(error);
     return {
-      content: "I am ready to assist with your executive priorities. Ask me anything about your productivity or tell me to add tasks to your list.",
-      embedType: null,
+      content: `⚠️ **AI Processing Error**: ${formatted.error}`,
+      embedType: "warning",
       actions: []
     };
   }
@@ -161,6 +170,15 @@ Return ONLY valid JSON object with this schema:
 
 export async function analyzeBehavior(taskHistory) {
   try {
+    if (!taskHistory || taskHistory.length === 0) {
+      return {
+        peakHours: "Not determined yet",
+        mostPostponed: "None",
+        avgDelay: "0 mins",
+        behaviorType: "New User",
+        memories: []
+      };
+    }
     const ai = getAI();
     const prompt = `Analyze this user's task completion and productivity history: ${JSON.stringify(taskHistory)}
 Determine their biological peak focus hours, items they postpone most often, average task start delay, behavioral archetype, and actionable learned memories.
@@ -170,7 +188,7 @@ Return ONLY valid JSON matching this schema:
   "mostPostponed": "e.g. DSA Practice or Admin work",
   "avgDelay": "e.g. 34 minutes",
   "behaviorType": "e.g. Deadline Sprinter or Deep Focus Strategist",
-  "memories": [ { "key": "Peak Window", "value": "9 AM - 11 AM" }, { "key": "Burnout Threshold", "value": "3.5 hours" } ]
+  "memories": [ { "key": "Peak Window", "value": "9 AM - 11 AM" } ]
 }`;
 
     const response = await ai.models.generateContent({
@@ -178,29 +196,9 @@ Return ONLY valid JSON matching this schema:
       contents: prompt
     });
 
-    return cleanAndParseJSON(response.text, {
-      peakHours: "9 AM – 11 AM",
-      mostPostponed: "DSA Practice",
-      avgDelay: "34 minutes",
-      behaviorType: "Deadline Sprinter",
-      memories: [
-        { key: "Peak Window", value: "9 AM – 11 AM" },
-        { key: "Preferred Break", value: "15m Walk after 90m Focus" },
-        { key: "Communication Style", value: "Direct & Concise" },
-        { key: "Postponement Risk", value: "High on Friday afternoons" }
-      ]
-    });
+    return cleanAndParseJSON(response.text);
   } catch (error) {
-    console.error("Error in analyzeBehavior:", error);
-    return {
-      peakHours: "9 AM – 11 AM",
-      mostPostponed: "DSA Practice",
-      avgDelay: "34 minutes",
-      behaviorType: "Deadline Sprinter",
-      memories: [
-        { key: "Peak Window", value: "9 AM – 11 AM" },
-        { key: "Preferred Break", value: "15m Walk after 90m Focus" }
-      ]
-    };
+    const formatted = formatGeminiError(error);
+    throw formatted;
   }
 }

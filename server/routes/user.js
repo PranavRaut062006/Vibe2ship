@@ -12,9 +12,9 @@ router.get('/', async (req, res) => {
     if (!doc.exists) {
       userData = {
         name: 'New User',
-        email: 'user@focusflow.ai',
+        email: 'user@lifepilot.ai',
         consistencyScore: 0,
-        productivityMode: 'Focus',
+        productivityMode: 'Balanced',
         streak: 0,
         createdAt: new Date().toISOString()
       };

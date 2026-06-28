@@ -16,8 +16,8 @@ const jetbrainsMono = JetBrains_Mono({
 });
 
 export const metadata = {
-  title: 'FocusFlow AI — AI Executive Productivity Companion',
-  description: 'FocusFlow AI is an intelligent executive assistant that discovers work, understands priorities, learns habits, creates plans, replans automatically, predicts failures, and motivates users.',
+  title: 'LifePilot AI — Your AI Executive Productivity Companion',
+  description: 'LifePilot AI is an intelligent executive assistant that discovers work, understands priorities, learns habits, creates plans, replans automatically, predicts failures, and motivates users.',
 };
 
 export default function RootLayout({ children }) {

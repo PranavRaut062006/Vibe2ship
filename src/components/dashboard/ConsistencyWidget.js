@@ -6,7 +6,7 @@ import { fetchUser } from '@/lib/api';
 import styles from './ConsistencyWidget.module.css';
 
 export default function ConsistencyWidget() {
-  const [score, setScore] = useState(87);
+  const [score, setScore] = useState(0);
   const radius = 54;
   const circumference = 2 * Math.PI * radius;
   const strokeDashoffset = circumference - (score / 100) * circumference;
@@ -15,7 +15,7 @@ export default function ConsistencyWidget() {
     async function loadUser() {
       try {
         const res = await fetchUser();
-        if (res.user?.consistencyScore) {
+        if (res.user?.consistencyScore !== undefined) {
           setScore(res.user.consistencyScore);
         }
       } catch (err) {
@@ -28,7 +28,7 @@ export default function ConsistencyWidget() {
   return (
     <div className={styles.card}>
       <div className={styles.header}>
-        <span className={styles.categoryPill}>Consistent Performer</span>
+        <span className={styles.categoryPill}>{score > 0 ? 'Consistent Performer' : 'Getting Started'}</span>
       </div>
 
       <div className={styles.scoreArea}>
@@ -65,34 +65,40 @@ export default function ConsistencyWidget() {
         
         <div className={styles.trend}>
           <TrendingUp size={14} className="text-accent" />
-          <span className="text-accent">↑ Live AI tracked score</span>
+          <span className="text-accent">{score > 0 ? '↑ Live AI tracked score' : 'Complete tasks to build score'}</span>
         </div>
       </div>
 
       {/* Sparkline chart */}
       <div className={styles.sparklineContainer}>
         <div className={styles.sparklineLabel}>Last 7 Days Trend</div>
-        <svg className={styles.sparkline} viewBox="0 0 200 40" preserveAspectRatio="none">
-          <path
-            d="M 0 32 L 33 28 L 66 34 L 100 20 L 133 15 L 166 22 L 200 8"
-            fill="none"
-            stroke="#00D4AA"
-            strokeWidth="2.5"
-            strokeLinecap="round"
-            strokeLinejoin="round"
-          />
-          <path
-            d="M 0 32 L 33 28 L 66 34 L 100 20 L 133 15 L 166 22 L 200 8 L 200 40 L 0 40 Z"
-            fill="url(#sparklineGrad)"
-            opacity="0.2"
-          />
-          <defs>
-            <linearGradient id="sparklineGrad" x1="0" y1="0" x2="0" y2="1">
-              <stop offset="0%" stopColor="#00D4AA" />
-              <stop offset="100%" stopColor="transparent" />
-            </linearGradient>
-          </defs>
-        </svg>
+        {score === 0 ? (
+          <div style={{ height: '40px', display: 'flex', alignItems: 'center', justifyContent: 'center', color: '#8B8BA0', fontSize: '12px' }}>
+            No trend data yet. Complete your first task!
+          </div>
+        ) : (
+          <svg className={styles.sparkline} viewBox="0 0 200 40" preserveAspectRatio="none">
+            <path
+              d="M 0 32 L 33 28 L 66 34 L 100 20 L 133 15 L 166 22 L 200 8"
+              fill="none"
+              stroke="#00D4AA"
+              strokeWidth="2.5"
+              strokeLinecap="round"
+              strokeLinejoin="round"
+            />
+            <path
+              d="M 0 32 L 33 28 L 66 34 L 100 20 L 133 15 L 166 22 L 200 8 L 200 40 L 0 40 Z"
+              fill="url(#sparklineGrad)"
+              opacity="0.2"
+            />
+            <defs>
+              <linearGradient id="sparklineGrad" x1="0" y1="0" x2="0" y2="1">
+                <stop offset="0%" stopColor="#00D4AA" />
+                <stop offset="100%" stopColor="transparent" />
+              </linearGradient>
+            </defs>
+          </svg>
+        )}
       </div>
     </div>
   );

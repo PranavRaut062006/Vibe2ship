@@ -39,7 +39,7 @@ export default function ReplanningDrawer({ isOpen, onClose, onAccept }) {
         </div>
 
         <p className={styles.subtitle}>
-          A schedule change or delay occurred. FocusFlow AI dynamically re-optimized downstream blocks to protect your high-priority items without causing burnout.
+          A schedule change or delay occurred. LifePilot AI dynamically re-optimized downstream blocks to protect your high-priority items without causing burnout.
         </p>
 
         <div className={styles.changesList}>

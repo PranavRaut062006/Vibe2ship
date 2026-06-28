@@ -62,7 +62,7 @@ export default function AIMemoryPanel() {
         <div className={styles.titleRow}>
           <Brain size={22} className="text-primary-color" />
           <div>
-            <h3 className={styles.title}>What FocusFlow AI Knows About You</h3>
+            <h3 className={styles.title}>What LifePilot AI Knows About You</h3>
             <p className={styles.subtitle}>Edit or forget any memory to refine executive intelligence</p>
           </div>
         </div>
@@ -70,7 +70,7 @@ export default function AIMemoryPanel() {
 
       <div className={styles.list}>
         {memories.length === 0 ? (
-          <div className={styles.empty}>No memories recorded yet. FocusFlow AI will autonomously learn your habits and preferences as you complete tasks.</div>
+          <div className={styles.empty}>No memories recorded yet. LifePilot AI will autonomously learn your habits and preferences as you complete tasks.</div>
         ) : (
           memories.map((m) => (
             <div key={m.id} className={styles.row}>

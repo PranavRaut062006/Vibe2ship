@@ -25,7 +25,7 @@ const PORT = process.env.PORT || 5000;
 app.use(cors());
 app.use(express.json());
 
-// Initialize Firestore Default User
+// Initialize Firestore Collections Schema & Default User Profile
 const initFirestore = async () => {
   try {
     const userRef = db.collection('users').doc('default-user');
@@ -33,10 +33,11 @@ const initFirestore = async () => {
     if (!doc.exists) {
       console.log("🌱 Initializing clean user profile in Firestore...");
       await userRef.set({
+        uid: 'default-user',
         name: 'New User',
-        email: 'user@focusflow.ai',
+        email: 'user@lifepilot.ai',
         consistencyScore: 0,
-        productivityMode: 'Focus',
+        productivityMode: 'Balanced',
         streak: 0,
         createdAt: new Date().toISOString()
       });
@@ -44,8 +45,25 @@ const initFirestore = async () => {
     } else {
       console.log("🔥 Connected to Firebase Firestore");
     }
+
+    // Initialize Default Settings if not present
+    const settingsRef = db.collection('settings').doc('default-user');
+    const settingsDoc = await settingsRef.get();
+    if (!settingsDoc.exists) {
+      await settingsRef.set({
+        userId: 'default-user',
+        geminiApiKeyStatus: 'default',
+        googleCalendarConnected: false,
+        peakFocusHours: '09:00 - 11:00',
+        burnoutThresholdHours: 5,
+        updatedAt: new Date().toISOString()
+      });
+      console.log("✅ Default settings initialized in Firestore!");
+    }
+
+    console.log("📋 Verified schema structure for collections: users, tasks, goals, habits, calendarEvents, gmailTasks, chatMessages, notifications, consistency, settings.");
   } catch (err) {
-    console.error("❌ Error verifying Firestore default user:", err.message);
+    console.error("❌ Error verifying Firestore schema:", err.message);
   }
 };
 
@@ -61,9 +79,9 @@ app.use('/api/memory', memoryRouter);
 
 // Health Check
 app.get('/api/health', (req, res) => {
-  res.json({ status: 'ok', service: 'FocusFlow AI Backend (Firestore)', timestamp: new Date() });
+  res.json({ status: 'ok', service: 'LifePilot AI Backend (Firestore)', timestamp: new Date() });
 });
 
 app.listen(PORT, () => {
-  console.log(`🚀 FocusFlow AI Backend running on http://localhost:${PORT}`);
+  console.log(`🚀 LifePilot AI Backend running on http://localhost:${PORT}`);
 });

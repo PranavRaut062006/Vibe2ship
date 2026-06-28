@@ -150,7 +150,7 @@ export default function InboxPage() {
             <Mail size={36} className="text-primary-color" />
           </div>
           <h2>Connect Gmail to let AI extract your tasks automatically</h2>
-          <p>FocusFlow AI securely scans subject lines and deadlines to build your executive priority queue without lifting a finger.</p>
+          <p>LifePilot AI securely scans subject lines and deadlines to build your executive priority queue without lifting a finger.</p>
           <button className={styles.connectBtn} onClick={() => setConnected(true)}>
             <span>Connect Gmail Account</span>
             <ExternalLink size={16} />

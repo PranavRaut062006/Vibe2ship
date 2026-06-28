@@ -146,10 +146,10 @@ export default function AIChatPage() {
         <div className={styles.topBar}>
           <div className={styles.titleRow}>
             <div className={styles.readyDot} title="AI Ready" />
-            <h2 className={styles.title}>FocusFlow AI Advisor</h2>
+            <h2 className={styles.title}>LifePilot AI Advisor</h2>
           </div>
           <div className={styles.contextPill}>
-            Context: {taskCount} tasks · Live Gemini 2.5 Flash
+            Context: {taskCount} tasks · Live Gemini 3.1 Pro
           </div>
         </div>
 
@@ -188,7 +188,7 @@ export default function AIChatPage() {
                     <span className={styles.dot} />
                     <span className={styles.dot} />
                   </div>
-                  <span className={styles.thinkingText}>FocusFlow AI analyzing your schedule and history...</span>
+                  <span className={styles.thinkingText}>LifePilot AI analyzing your schedule and history...</span>
                 </div>
               )}
             </>
@@ -256,7 +256,7 @@ export default function AIChatPage() {
           </div>
 
           <div className={styles.disclaimer}>
-            FocusFlow AI has context of your tasks, schedule, and behavior
+            LifePilot AI has context of your tasks, schedule, and behavior
           </div>
         </div>
       </div>
