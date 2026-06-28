@@ -1,18 +1,42 @@
 'use client';
 
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { GripVertical, Sparkles, CalendarPlus } from 'lucide-react';
+import { fetchTasks } from '@/lib/api';
 import styles from './TaskQueuePanel.module.css';
 
 export default function TaskQueuePanel({ onScheduleTask }) {
   const [filter, setFilter] = useState('All'); // 'All' | 'Focus' | 'Meetings' | 'Personal'
-  const [tasks, setTasks] = useState([
-    { id: 'q1', name: 'DSA Practice — Dynamic Programming', category: 'Focus', colorClass: 'dotPurple', estimate: '2 hrs', p: 'P1', pClass: 'p1' },
-    { id: 'q2', name: 'System Architecture Review', category: 'Focus', colorClass: 'dotPurple', estimate: '1 hr', p: 'P2', pClass: 'p2' },
-    { id: 'q3', name: '1-on-1 with Mentor', category: 'Meetings', colorClass: 'dotTeal', estimate: '30 mins', p: 'P2', pClass: 'p2' },
-    { id: 'q4', name: 'Gym / Workout Session', category: 'Personal', colorClass: 'dotBlue', estimate: '45 mins', p: 'P3', pClass: 'p3' },
-    { id: 'q5', name: 'Update LinkedIn Profile & CV', category: 'Personal', colorClass: 'dotBlue', estimate: '30 mins', p: 'P3', pClass: 'p3' }
-  ]);
+  const [tasks, setTasks] = useState([]);
+
+  useEffect(() => {
+    async function loadTasks() {
+      try {
+        const res = await fetchTasks();
+        if (res.tasks) {
+          const formatted = res.tasks.filter(t => t.status === 'approved').map(t => {
+            const pClass = t.priority ? t.priority.toLowerCase() : 'p2';
+            const dotClass = t.category === 'Meetings' ? 'dotTeal' : t.category === 'Personal' ? 'dotBlue' : 'dotPurple';
+            return {
+              id: t._id || t.id,
+              name: t.title,
+              category: t.category || 'Focus',
+              colorClass: dotClass,
+              estimate: `${t.estimatedMinutes || 45} mins`,
+              p: t.priority || 'P2',
+              pClass
+            };
+          });
+          setTasks(formatted);
+        }
+      } catch (err) {
+        console.error("Failed to load task queue:", err);
+      }
+    }
+    loadTasks();
+    window.addEventListener('taskCreated', loadTasks);
+    return () => window.removeEventListener('taskCreated', loadTasks);
+  }, []);
 
   const filteredTasks = filter === 'All' ? tasks : tasks.filter(t => t.category === filter);
 
@@ -46,7 +70,7 @@ export default function TaskQueuePanel({ onScheduleTask }) {
       <div className={styles.queueList}>
         {filteredTasks.length === 0 ? (
           <div className={styles.emptyQueue}>
-            <p>No tasks in this category.</p>
+            <p>No approved tasks in queue. Add tasks via Quick Add or Inbox scanner.</p>
           </div>
         ) : (
           filteredTasks.map((task) => (
@@ -86,7 +110,7 @@ export default function TaskQueuePanel({ onScheduleTask }) {
             <span>AI Suggestion</span>
           </div>
           <p>
-            Schedule <strong>DSA Practice</strong> before 11 AM for best cognitive focus.
+            Schedule P1 priority focus items before 11 AM for best cognitive flow.
           </p>
         </div>
       </div>

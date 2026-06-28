@@ -1,13 +1,29 @@
 'use client';
 
+import { useState, useEffect } from 'react';
 import { TrendingUp } from 'lucide-react';
+import { fetchUser } from '@/lib/api';
 import styles from './ConsistencyWidget.module.css';
 
 export default function ConsistencyWidget() {
-  const score = 87;
+  const [score, setScore] = useState(87);
   const radius = 54;
   const circumference = 2 * Math.PI * radius;
   const strokeDashoffset = circumference - (score / 100) * circumference;
+
+  useEffect(() => {
+    async function loadUser() {
+      try {
+        const res = await fetchUser();
+        if (res.user?.consistencyScore) {
+          setScore(res.user.consistencyScore);
+        }
+      } catch (err) {
+        console.error("Failed to fetch consistency score:", err);
+      }
+    }
+    loadUser();
+  }, []);
 
   return (
     <div className={styles.card}>
@@ -49,7 +65,7 @@ export default function ConsistencyWidget() {
         
         <div className={styles.trend}>
           <TrendingUp size={14} className="text-accent" />
-          <span className="text-accent">↑ 4 points this week</span>
+          <span className="text-accent">↑ Live AI tracked score</span>
         </div>
       </div>
 

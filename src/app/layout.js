@@ -16,8 +16,8 @@ const jetbrainsMono = JetBrains_Mono({
 });
 
 export const metadata = {
-  title: 'LifeSaver AI — AI Executive Productivity Companion',
-  description: 'LifeSaver AI is an intelligent executive assistant that discovers work, understands priorities, learns habits, creates plans, replans automatically, predicts failures, and motivates users.',
+  title: 'FocusFlow AI — AI Executive Productivity Companion',
+  description: 'FocusFlow AI is an intelligent executive assistant that discovers work, understands priorities, learns habits, creates plans, replans automatically, predicts failures, and motivates users.',
 };
 
 export default function RootLayout({ children }) {

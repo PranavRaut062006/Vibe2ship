@@ -1,38 +1,50 @@
 'use client';
 
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { Sparkles, Paperclip, Send, Mic, Menu } from 'lucide-react';
 import ChatSidebar from '@/components/aichat/ChatSidebar';
 import MessageCard from '@/components/aichat/MessageCard';
+import { fetchChatHistory, sendChatMessage, fetchTasks } from '@/lib/api';
 import styles from './page.module.css';
 
 export default function AIChatPage() {
   const [conversations, setConversations] = useState([
-    { id: 'c1', title: 'Why am I falling behind?', time: '2h ago' },
-    { id: 'c2', title: 'Plan my week', time: '1d ago' },
-    { id: 'c3', title: 'DSA recovery plan', time: '3d ago' }
+    { id: 'c1', title: 'New Executive Chat', time: 'Just now' }
   ]);
   const [activeId, setActiveId] = useState('c1');
   const [mobileSidebarOpen, setMobileSidebarOpen] = useState(false);
+  const [taskCount, setTaskCount] = useState(0);
 
-  const [messages, setMessages] = useState([
-    { id: 'm1', sender: 'user', text: 'Why am I falling behind on today\'s goals?' },
-    {
-      id: 'm2',
-      sender: 'ai',
-      text: 'You\'re 34% behind on today\'s schedule. Here\'s why and what I recommend:',
-      embedType: 'progress_breakdown',
-      actions: [
-        { label: 'Accept Reschedule', primary: true },
-        { label: 'View New Schedule', primary: false },
-        { label: 'Tell me more', primary: false }
-      ]
-    }
-  ]);
-
+  const [messages, setMessages] = useState([]);
   const [input, setInput] = useState('');
   const [thinking, setThinking] = useState(false);
   const [attachedFile, setAttachedFile] = useState(null);
+
+  useEffect(() => {
+    async function loadInitial() {
+      try {
+        const tRes = await fetchTasks();
+        if (tRes.tasks) setTaskCount(tRes.tasks.length);
+
+        const cRes = await fetchChatHistory();
+        if (cRes.messages && cRes.messages.length > 0) {
+          const formatted = cRes.messages.map(m => ({
+            id: m._id || m.id,
+            sender: m.role === 'user' ? 'user' : 'ai',
+            text: m.content,
+            embedType: m.embedType || null,
+            actions: m.actions || []
+          }));
+          setMessages(formatted);
+        } else {
+          setMessages([]);
+        }
+      } catch (err) {
+        console.error("Failed to load chat history:", err);
+      }
+    }
+    loadInitial();
+  }, []);
 
   const chips = [
     "📊 How am I doing today?",
@@ -41,13 +53,14 @@ export default function AIChatPage() {
     "💡 What should I do now?"
   ];
 
-  const handleSend = (textToSend = input) => {
-    if (!textToSend.trim() && !attachedFile) return;
+  const handleSend = async (textToSend = input) => {
+    if (!textToSend.trim() && !attachedFile || thinking) return;
 
+    const fullText = attachedFile ? `[Attached Timetable: ${attachedFile.name}] ${textToSend}` : textToSend;
     const userMsg = {
-      id: `m_${Date.now()}`,
+      id: `m_user_${Date.now()}`,
       sender: 'user',
-      text: attachedFile ? `[Attached Timetable: ${attachedFile.name}] ${textToSend}` : textToSend
+      text: fullText
     };
 
     setMessages(prev => [...prev, userMsg]);
@@ -55,31 +68,38 @@ export default function AIChatPage() {
     setAttachedFile(null);
     setThinking(true);
 
-    setTimeout(() => {
-      setThinking(false);
-      let aiResp = {
-        id: `m_ai_${Date.now()}`,
+    try {
+      const res = await sendChatMessage(fullText);
+      const aiMsg = {
+        id: res.assistantMessage?._id || `m_ai_${Date.now()}`,
         sender: 'ai',
-        text: 'I\'ve analyzed your updated query against your 14 pending tasks and peak productivity windows.'
+        text: res.assistantMessage?.content || "I have analyzed your executive schedule.",
+        embedType: res.assistantMessage?.embedType || null,
+        actions: res.assistantMessage?.actions || []
       };
-
-      if (textToSend.includes('risk') || textToSend.includes('missing')) {
-        aiResp.embedType = 'warning';
-      } else if (textToSend.includes('Plan') || textToSend.includes('week')) {
-        aiResp.embedType = 'question';
-      } else {
-        aiResp.actions = [{ label: 'Apply AI Suggestions', primary: true }];
-      }
-
-      setMessages(prev => [...prev, aiResp]);
-    }, 2000);
+      setMessages(prev => [...prev, aiMsg]);
+      window.dispatchEvent(new CustomEvent('taskCreated'));
+    } catch (err) {
+      console.error("Chat error:", err);
+      setMessages(prev => [...prev, {
+        id: `m_err_${Date.now()}`,
+        sender: 'ai',
+        text: "⚠️ Backend API error or rate limit exceeded while contacting Gemini. Please verify Express server is running."
+      }]);
+    } finally {
+      setThinking(false);
+    }
   };
 
   const handleNewChat = () => {
     const newId = `c_${Date.now()}`;
-    setConversations(prev => [{ id: newId, title: 'New Conversation', time: 'Just now' }, ...prev]);
+    setConversations(prev => [{ id: newId, title: 'New Executive Chat', time: 'Just now' }, ...prev]);
     setActiveId(newId);
-    setMessages([]);
+    setMessages([{
+      id: `m_start_${Date.now()}`,
+      sender: 'ai',
+      text: "Starting new executive consulting session. What would you like to focus on?"
+    }]);
   };
 
   const handleDeleteChat = (id) => {
@@ -126,10 +146,10 @@ export default function AIChatPage() {
         <div className={styles.topBar}>
           <div className={styles.titleRow}>
             <div className={styles.readyDot} title="AI Ready" />
-            <h2 className={styles.title}>AI Assistant</h2>
+            <h2 className={styles.title}>FocusFlow AI Advisor</h2>
           </div>
           <div className={styles.contextPill}>
-            Context: 14 tasks · 3 calendar events
+            Context: {taskCount} tasks · Live Gemini 2.5 Flash
           </div>
         </div>
 
@@ -140,8 +160,8 @@ export default function AIChatPage() {
               <div className={styles.sparklesIconWrapper}>
                 <Sparkles size={48} className="text-primary-color" />
               </div>
-              <h3>Your AI Executive Assistant</h3>
-              <p>Ask me anything about your schedule, productivity, or upcoming deadlines. I know your tasks and calendar.</p>
+              <h3>Your AI Executive Advisor</h3>
+              <p>Ask me anything about your productivity. Tell me what tasks you need to get done, and I will add them to your schedule.</p>
               
               <div className={styles.onboardingChips}>
                 {chips.map((c, i) => (
@@ -157,7 +177,7 @@ export default function AIChatPage() {
                 <MessageCard
                   key={msg.id}
                   message={msg}
-                  onAction={(actLabel) => handleSend(`User clicked action: ${actLabel}`)}
+                  onAction={(actLabel) => handleSend(`Execute action: ${actLabel}`)}
                 />
               ))}
 
@@ -168,7 +188,7 @@ export default function AIChatPage() {
                     <span className={styles.dot} />
                     <span className={styles.dot} />
                   </div>
-                  <span className={styles.thinkingText}>Analyzing your schedule and history...</span>
+                  <span className={styles.thinkingText}>FocusFlow AI analyzing your schedule and history...</span>
                 </div>
               )}
             </>
@@ -206,7 +226,7 @@ export default function AIChatPage() {
 
             <textarea
               className={styles.textarea}
-              placeholder="Ask your AI assistant..."
+              placeholder="Ask your AI advisor..."
               rows={1}
               value={input}
               onChange={(e) => setInput(e.target.value)}
@@ -228,7 +248,7 @@ export default function AIChatPage() {
 
             <button
               className={styles.sendBtn}
-              disabled={!input.trim() && !attachedFile}
+              disabled={(!input.trim() && !attachedFile) || thinking}
               onClick={() => handleSend()}
             >
               <Send size={16} />
@@ -236,7 +256,7 @@ export default function AIChatPage() {
           </div>
 
           <div className={styles.disclaimer}>
-            AI has context of your tasks, schedule, and behavior
+            FocusFlow AI has context of your tasks, schedule, and behavior
           </div>
         </div>
       </div>

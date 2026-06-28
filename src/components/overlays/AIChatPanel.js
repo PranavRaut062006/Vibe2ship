@@ -49,7 +49,7 @@ export default function AIChatPanel({ isOpen, onClose }) {
         <div className={styles.header}>
           <div className={styles.headerLeft}>
             <div className={styles.thinkingDot} />
-            <h3>LifeSaver AI</h3>
+            <h3>FocusFlow AI</h3>
             <span className="ai-badge">AI</span>
           </div>
           <button className={styles.closeBtn} onClick={onClose} aria-label="Close AI Chat">

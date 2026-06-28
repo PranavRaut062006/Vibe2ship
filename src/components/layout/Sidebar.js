@@ -23,7 +23,7 @@ export default function Sidebar({ collapsed, onToggle, activePage, onNavigate, c
           </div>
           {!collapsed && (
             <span className={styles.logoText}>
-              LifeSaver<span className={styles.logoAi}>AI</span>
+              FocusFlow<span className={styles.logoAi}>AI</span>
             </span>
           )}
         </div>

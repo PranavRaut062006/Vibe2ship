@@ -1,34 +1,59 @@
 'use client';
 
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { Brain, Edit3, Trash2, Check, X } from 'lucide-react';
+import { fetchMemories, updateMemory, deleteMemory } from '@/lib/api';
 import styles from './AIMemoryPanel.module.css';
 
 export default function AIMemoryPanel() {
-  const [memories, setMemories] = useState([
-    { id: 'm1', text: 'Preferred focus time: 9 AM – 11 AM' },
-    { id: 'm2', text: 'Average task duration: 1.2x estimated' },
-    { id: 'm3', text: 'Frequently postponed: DSA Practice' },
-    { id: 'm4', text: 'Most productive days: Tue, Wed' }
-  ]);
-
-  const [confirmId, setConfirmId] = useState(null);
-  const [editingId, setEditingId] = useState(null);
+  const [memories, setMemories] = useState([]);
+  const [confirmKey, setConfirmKey] = useState(null);
+  const [editingKey, setEditingKey] = useState(null);
   const [editText, setEditText] = useState('');
 
-  const handleDelete = (id) => {
-    setMemories(prev => prev.filter(m => m.id !== id));
-    setConfirmId(null);
+  const loadMemories = async () => {
+    try {
+      const res = await fetchMemories();
+      if (res.memories) {
+        setMemories(res.memories.map(m => ({
+          id: m._id || m.key,
+          key: m.key,
+          text: `${m.key}: ${m.value}`,
+          val: m.value
+        })));
+      }
+    } catch (err) {
+      console.error("Failed to load memories:", err);
+    }
+  };
+
+  useEffect(() => {
+    loadMemories();
+  }, []);
+
+  const handleDelete = async (key) => {
+    try {
+      await deleteMemory(key);
+      await loadMemories();
+      setConfirmKey(null);
+    } catch (err) {
+      console.error("Failed to delete memory:", err);
+    }
   };
 
   const handleStartEdit = (m) => {
-    setEditingId(m.id);
-    setEditText(m.text);
+    setEditingKey(m.key);
+    setEditText(m.val);
   };
 
-  const handleSaveEdit = (id) => {
-    setMemories(prev => prev.map(m => m.id === id ? { ...m, text: editText } : m));
-    setEditingId(null);
+  const handleSaveEdit = async (key) => {
+    try {
+      await updateMemory(key, editText);
+      await loadMemories();
+      setEditingKey(null);
+    } catch (err) {
+      console.error("Failed to update memory:", err);
+    }
   };
 
   return (
@@ -37,7 +62,7 @@ export default function AIMemoryPanel() {
         <div className={styles.titleRow}>
           <Brain size={22} className="text-primary-color" />
           <div>
-            <h3 className={styles.title}>What AI Knows About You</h3>
+            <h3 className={styles.title}>What FocusFlow AI Knows About You</h3>
             <p className={styles.subtitle}>Edit or forget any memory to refine executive intelligence</p>
           </div>
         </div>
@@ -45,11 +70,11 @@ export default function AIMemoryPanel() {
 
       <div className={styles.list}>
         {memories.length === 0 ? (
-          <div className={styles.empty}>All custom memories wiped. AI is learning fresh preferences.</div>
+          <div className={styles.empty}>No memories recorded yet. FocusFlow AI will autonomously learn your habits and preferences as you complete tasks.</div>
         ) : (
           memories.map((m) => (
             <div key={m.id} className={styles.row}>
-              {editingId === m.id ? (
+              {editingKey === m.key ? (
                 <div className={styles.editForm}>
                   <input
                     type="text"
@@ -57,19 +82,19 @@ export default function AIMemoryPanel() {
                     value={editText}
                     onChange={(e) => setEditText(e.target.value)}
                   />
-                  <button className={styles.saveBtn} onClick={() => handleSaveEdit(m.id)}><Check size={14} /></button>
-                  <button className={styles.cancelBtn} onClick={() => setEditingId(null)}><X size={14} /></button>
+                  <button className={styles.saveBtn} onClick={() => handleSaveEdit(m.key)}><Check size={14} /></button>
+                  <button className={styles.cancelBtn} onClick={() => setEditingKey(null)}><X size={14} /></button>
                 </div>
               ) : (
                 <>
                   <span className={styles.text}>{m.text}</span>
 
                   <div className={styles.actions}>
-                    {confirmId === m.id ? (
+                    {confirmKey === m.key ? (
                       <div className={styles.confirmBox}>
                         <span className={styles.confirmText}>Forget?</span>
-                        <button className={styles.confirmYes} onClick={() => handleDelete(m.id)}>Yes</button>
-                        <button className={styles.confirmNo} onClick={() => setConfirmId(null)}>No</button>
+                        <button className={styles.confirmYes} onClick={() => handleDelete(m.key)}>Yes</button>
+                        <button className={styles.confirmNo} onClick={() => setConfirmKey(null)}>No</button>
                       </div>
                     ) : (
                       <>
@@ -77,7 +102,7 @@ export default function AIMemoryPanel() {
                           <Edit3 size={14} />
                           <span>Edit</span>
                         </button>
-                        <button className={styles.ghostBtnDanger} onClick={() => setConfirmId(m.id)} title="Forget memory">
+                        <button className={styles.ghostBtnDanger} onClick={() => setConfirmKey(m.key)} title="Forget memory">
                           <Trash2 size={14} />
                           <span>Forget</span>
                         </button>

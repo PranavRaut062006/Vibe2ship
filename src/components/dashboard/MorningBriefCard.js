@@ -1,11 +1,37 @@
 'use client';
 
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { Sparkles, Mail, Calendar as CalendarIcon, AlertTriangle, X } from 'lucide-react';
+import { fetchTasks, fetchUser } from '@/lib/api';
 import styles from './MorningBriefCard.module.css';
 
 export default function MorningBriefCard({ onOrganize }) {
   const [dismissed, setDismissed] = useState(false);
+  const [userName, setUserName] = useState('New User');
+  const [taskCount, setTaskCount] = useState(0);
+  const [urgentCount, setUrgentCount] = useState(0);
+
+  useEffect(() => {
+    async function loadData() {
+      try {
+        const userRes = await fetchUser();
+        if (userRes.user?.name) {
+          setUserName(userRes.user.name.split(' ')[0]);
+        }
+        const tasksRes = await fetchTasks();
+        if (tasksRes.tasks) {
+          setTaskCount(tasksRes.tasks.length);
+          const urgent = tasksRes.tasks.filter(t => t.priority === 'P1' || t.deadline?.toLowerCase().includes('today') || t.deadline?.toLowerCase().includes('tomorrow'));
+          setUrgentCount(urgent.length);
+        }
+      } catch (err) {
+        console.error("Failed to load morning brief data:", err);
+      }
+    }
+    loadData();
+    window.addEventListener('taskCreated', loadData);
+    return () => window.removeEventListener('taskCreated', loadData);
+  }, []);
 
   if (dismissed) return null;
 
@@ -13,7 +39,7 @@ export default function MorningBriefCard({ onOrganize }) {
     <div className={`${styles.card} fade-in`}>
       <div className={styles.headerRow}>
         <div className={styles.greetingWrapper}>
-          <h2 className={styles.greeting}>Good morning, Pran 👋</h2>
+          <h2 className={styles.greeting}>Good morning, {userName} 👋</h2>
         </div>
         <div className={styles.badgeWrapper}>
           <span className="ai-badge">AI Brief</span>
@@ -24,21 +50,23 @@ export default function MorningBriefCard({ onOrganize }) {
       </div>
 
       <p className={styles.summary}>
-        I&apos;ve reviewed your Gmail and calendar. Here&apos;s what needs your attention today.
+        {taskCount === 0 
+          ? "No tasks yet. Add your first task or scan Gmail to generate your daily AI briefing." 
+          : "I've reviewed your active executive database. Here's what needs your attention today."}
       </p>
 
       <div className={styles.chipsRow}>
         <div className={styles.chip}>
           <Mail size={14} className="text-primary-color" />
-          <span>2 new tasks extracted</span>
+          <span>{taskCount} active tasks</span>
         </div>
         <div className={styles.chip}>
           <CalendarIcon size={14} className="text-accent" />
-          <span>3 calendar events</span>
+          <span>3 scheduled blocks</span>
         </div>
         <div className={styles.chip}>
           <AlertTriangle size={14} className="text-warning" />
-          <span>1 deadline tomorrow</span>
+          <span>{urgentCount} priority deadline(s)</span>
         </div>
       </div>
 

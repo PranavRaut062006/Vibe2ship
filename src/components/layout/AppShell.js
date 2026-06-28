@@ -100,6 +100,7 @@ export default function AppShell({ children }) {
       <QuickAddModal
         isOpen={quickAddOpen}
         onClose={() => setQuickAddOpen(false)}
+        onAdd={() => window.dispatchEvent(new CustomEvent('taskCreated'))}
       />
       <NotificationPanel
         isOpen={notifOpen}

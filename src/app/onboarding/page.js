@@ -55,7 +55,7 @@ export default function OnboardingPage() {
       <div className={styles.topBar}>
         <div className={styles.logo}>
           <Zap size={20} className="text-primary-color" />
-          <span>LifeSaver<strong>AI</strong></span>
+          <span>FocusFlow<strong>AI</strong></span>
         </div>
         <div className={styles.progressTrack}>
           <div className={styles.progressFill} style={{ width: `${(step / 5) * 100}%` }} />
@@ -70,7 +70,7 @@ export default function OnboardingPage() {
             <div className={styles.heroIconBox}>
               <Sparkles size={48} className="text-primary-color" />
             </div>
-            <h1 className={styles.headingXL}>Meet LifeSaver AI</h1>
+            <h1 className={styles.headingXL}>Meet FocusFlow AI</h1>
             <p className={styles.subtext}>
               Not a to-do app. An autonomous executive intelligence companion that discovers work, learns your habits, predicts risks, and replans automatically.
             </p>
@@ -218,7 +218,7 @@ export default function OnboardingPage() {
             </div>
             <h1 className={styles.headingXL}>Your Executive Assistant is Ready</h1>
             <p className={styles.subtext}>
-              We&apos;ve configured LifeSaver AI for your <strong>{role}</strong> workflow.
+              We&apos;ve configured FocusFlow AI for your <strong>{role}</strong> workflow.
             </p>
 
             <div className={styles.summaryCard}>

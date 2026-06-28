@@ -20,7 +20,7 @@ export default function MessageCard({ message, onAction }) {
     <div className={`${styles.aiRow} fade-in`}>
       <div className={styles.aiHeader}>
         <Sparkles size={14} className="text-primary-color" />
-        <span className={styles.aiLabel}>LifeSaver AI</span>
+        <span className={styles.aiLabel}>FocusFlow AI</span>
       </div>
 
       <div className={styles.aiCard}>

@@ -1,16 +1,33 @@
 'use client';
 
-import { useState } from 'react';
+import { useState, useEffect, useCallback } from 'react';
 import { ArrowRight, Mail, AlertCircle, RefreshCw } from 'lucide-react';
+import { fetchTasks } from '@/lib/api';
 import styles from './TaskList.module.css';
 
 export default function TaskList({ state = 'default', onConnectGmail, onViewAll }) {
-  const [status, setStatus] = useState(state); // 'default' | 'loading' | 'empty' | 'error'
-  const [tasks, setTasks] = useState([
-    { id: 1, name: 'Finalize API Integration', p: 'P1', pClass: 'p1', deadline: 'Due 3:00 PM', estimate: '1.5 hrs', prob: '94%' },
-    { id: 2, name: 'Review PR #42 — Auth Module', p: 'P2', pClass: 'p2', deadline: 'Due 5:00 PM', estimate: '45 mins', prob: '88%' },
-    { id: 3, name: 'Prepare Sprint Demo Slides', p: 'P3', pClass: 'p3', deadline: 'Due Tomorrow', estimate: '2 hrs', prob: '98%' }
-  ]);
+  const [status, setStatus] = useState('loading');
+  const [tasks, setTasks] = useState([]);
+
+  const loadTasks = useCallback(async () => {
+    setStatus('loading');
+    try {
+      const res = await fetchTasks();
+      const loaded = res.tasks || [];
+      setTasks(loaded);
+      setStatus(loaded.length === 0 ? 'empty' : 'default');
+    } catch (err) {
+      console.error("Failed to load tasks:", err);
+      setStatus('error');
+    }
+  }, []);
+
+  useEffect(() => {
+    loadTasks();
+    const handleCreated = () => loadTasks();
+    window.addEventListener('taskCreated', handleCreated);
+    return () => window.removeEventListener('taskCreated', handleCreated);
+  }, [loadTasks]);
 
   if (status === 'loading') {
     return (
@@ -45,10 +62,10 @@ export default function TaskList({ state = 'default', onConnectGmail, onViewAll 
           <div className={styles.emptyIcon}>
             <Mail size={24} className="text-primary-color" />
           </div>
-          <h4>Connect Gmail to get started</h4>
-          <p>Let AI analyze your inbox and rank your most critical tasks.</p>
+          <h4>No tasks yet. Add your first task or scan Gmail.</h4>
+          <p>Your executive priority queue is empty. Use Quick Add or scan your emails.</p>
           <button className={styles.connectBtn} onClick={onConnectGmail}>
-            <span>Connect Gmail</span>
+            <span>Scan Inbox</span>
             <ArrowRight size={16} />
           </button>
         </div>
@@ -65,8 +82,8 @@ export default function TaskList({ state = 'default', onConnectGmail, onViewAll 
         </div>
         <div className={styles.errorState}>
           <AlertCircle size={24} className="text-danger" />
-          <p>Failed to sync top priorities from AI service.</p>
-          <button className={styles.retryBtn} onClick={() => setStatus('default')}>
+          <p>Failed to sync top priorities from API server.</p>
+          <button className={styles.retryBtn} onClick={loadTasks}>
             <RefreshCw size={14} />
             <span>Retry Sync</span>
           </button>
@@ -83,29 +100,32 @@ export default function TaskList({ state = 'default', onConnectGmail, onViewAll 
       </div>
 
       <div className={styles.list}>
-        {tasks.map((task) => (
-          <div key={task.id} className={styles.item}>
-            <div className={`${styles.pCircle} ${styles[task.pClass]}`} title={`Priority ${task.p}`} />
+        {tasks.slice(0, 5).map((task) => {
+          const pClass = task.priority ? task.priority.toLowerCase() : 'p2';
+          return (
+            <div key={task._id || task.id} className={styles.item}>
+              <div className={`${styles.pCircle} ${styles[pClass]}`} title={`Priority ${task.priority}`} />
 
-            <div className={styles.content}>
-              <span className={styles.name}>{task.name}</span>
-              <div className={styles.chips}>
-                <span className={styles.chip}>{task.deadline}</span>
-                <span className={styles.chip}>{task.estimate}</span>
+              <div className={styles.content}>
+                <span className={styles.name}>{task.title}</span>
+                <div className={styles.chips}>
+                  <span className={styles.chip}>{task.deadline}</span>
+                  <span className={styles.chip}>~{task.estimatedMinutes}m</span>
+                </div>
+              </div>
+
+              <div className={styles.probWrapper}>
+                <span className={`mono text-accent ${styles.prob}`}>{task.aiConfidence || 92}%</span>
+                <span className={styles.probLabel}>prob.</span>
               </div>
             </div>
-
-            <div className={styles.probWrapper}>
-              <span className={`mono text-accent ${styles.prob}`}>{task.prob}</span>
-              <span className={styles.probLabel}>prob.</span>
-            </div>
-          </div>
-        ))}
+          );
+        })}
       </div>
 
       <div className={styles.footer}>
         <button className={styles.viewAllBtn} onClick={onViewAll}>
-          <span>View All 8 Tasks</span>
+          <span>View All ({tasks.length}) Tasks</span>
           <ArrowRight size={14} />
         </button>
       </div>
