@@ -2,26 +2,34 @@
 
 import { useState, useEffect } from 'react';
 import { useRouter } from 'next/navigation';
-import { Calendar, CheckSquare, Clock, ArrowRight, Target, Plus, AlertCircle, Circle, CheckCircle2, Edit2, Trash2 } from 'lucide-react';
-import { fetchTasks, fetchSchedule, updateTask, deleteTask } from '@/lib/api';
+import { Calendar, CheckSquare, Clock, ArrowRight, Target, Plus, AlertCircle, Circle, CheckCircle2, Edit2, Trash2, Zap, Award } from 'lucide-react';
+import { fetchTasks, fetchSchedule, updateTask, deleteTask, fetchInsights, fetchHabits, fetchGoals, updateScheduleBlocks } from '@/lib/api';
 import styles from './page.module.css';
 
 export default function DashboardPage() {
   const router = useRouter();
   const [tasks, setTasks] = useState([]);
   const [scheduleBlocks, setScheduleBlocks] = useState([]);
+  const [insights, setInsights] = useState(null);
+  const [habits, setHabits] = useState([]);
+  const [goals, setGoals] = useState([]);
   const [loading, setLoading] = useState(true);
 
   const loadDashboardData = async () => {
     try {
       setLoading(true);
-      const [tRes, sRes] = await Promise.all([fetchTasks(), fetchSchedule('today')]);
+      const [tRes, sRes, iRes, hRes, gRes] = await Promise.all([
+        fetchTasks(),
+        fetchSchedule('today'),
+        fetchInsights(),
+        fetchHabits(),
+        fetchGoals()
+      ]);
       setTasks(tRes.tasks || []);
-      if (sRes.schedule && sRes.schedule.blocks) {
-        setScheduleBlocks(sRes.schedule.blocks);
-      } else {
-        setScheduleBlocks([]);
-      }
+      setScheduleBlocks((sRes.schedule && sRes.schedule.blocks) ? sRes.schedule.blocks : []);
+      if (iRes) setInsights(iRes);
+      setHabits(hRes.habits || []);
+      setGoals(gRes.goals || []);
     } catch (err) {
       console.error("Failed to load dashboard summaries:", err);
     } finally {
@@ -88,6 +96,30 @@ export default function DashboardPage() {
     }
   };
 
+  const handleCompleteBlock = async (block) => {
+    const updated = scheduleBlocks.filter(b => (b._id || b.title) !== (block._id || block.title));
+    setScheduleBlocks(updated);
+    await updateScheduleBlocks('today', updated);
+    window.dispatchEvent(new CustomEvent('scheduleUpdated'));
+  };
+
+  const handleEditBlock = async (block) => {
+    const newTitle = prompt("Edit schedule block:", block.title);
+    if (!newTitle || newTitle.trim() === block.title) return;
+    const updated = scheduleBlocks.map(b => (b._id || b.title) === (block._id || block.title) ? { ...b, title: newTitle.trim() } : b);
+    setScheduleBlocks(updated);
+    await updateScheduleBlocks('today', updated);
+    window.dispatchEvent(new CustomEvent('scheduleUpdated'));
+  };
+
+  const handleDeleteBlock = async (block) => {
+    if (!confirm(`Delete calendar block "${block.title}"?`)) return;
+    const updated = scheduleBlocks.filter(b => (b._id || b.title) !== (block._id || block.title));
+    setScheduleBlocks(updated);
+    await updateScheduleBlocks('today', updated);
+    window.dispatchEvent(new CustomEvent('scheduleUpdated'));
+  };
+
   return (
     <div className={styles.container}>
       <div className={styles.heroHeader}>
@@ -115,12 +147,26 @@ export default function DashboardPage() {
           ) : (
             <div className={styles.list}>
               {todayBlocks.map((block, idx) => (
-                <div key={block._id || idx} className={styles.listItem}>
-                  <div>
-                    <div className={styles.itemTitle}>{block.title}</div>
-                    <div className={styles.itemSub}>
-                      <Clock size={13} /> {block.startTime} – {block.endTime} • {block.type?.toUpperCase()}
+                <div key={block._id || idx} className={styles.listItem} style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: '12px' }}>
+                  <div style={{ display: 'flex', alignItems: 'center', gap: '10px', flex: 1, overflow: 'hidden' }}>
+                    <div onClick={() => handleCompleteBlock(block)} style={{ cursor: 'pointer', color: 'var(--text-muted)', display: 'flex' }} title="Mark Complete">
+                      <Circle size={18} />
                     </div>
+                    <div style={{ overflow: 'hidden' }}>
+                      <div className={styles.itemTitle} style={{ whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>{block.title}</div>
+                      <div className={styles.itemSub}>
+                        <Clock size={13} /> {block.startTime} – {block.endTime} • {block.type?.toUpperCase()}
+                      </div>
+                    </div>
+                  </div>
+
+                  <div style={{ display: 'flex', alignItems: 'center', gap: '6px' }}>
+                    <button onClick={() => handleEditBlock(block)} style={{ background: 'transparent', border: 'none', color: 'var(--text-muted)', cursor: 'pointer', padding: '4px' }} title="Edit Block">
+                      <Edit2 size={14} />
+                    </button>
+                    <button onClick={() => handleDeleteBlock(block)} style={{ background: 'transparent', border: 'none', color: '#ef4444', cursor: 'pointer', padding: '4px' }} title="Delete Block">
+                      <Trash2 size={14} />
+                    </button>
                   </div>
                 </div>
               ))}
@@ -177,6 +223,36 @@ export default function DashboardPage() {
               })}
             </div>
           )}
+        </div>
+
+        {/* Consistency Score & Goals Summary */}
+        <div className={styles.card} style={{ gridColumn: 'span 2', background: 'linear-gradient(135deg, rgba(108, 99, 255, 0.1) 0%, rgba(26, 26, 38, 0.9) 100%)', border: '1px solid rgba(108, 99, 255, 0.3)' }}>
+          <div className={styles.cardHeader}>
+            <div className={styles.cardTitle}>
+              <Award size={20} color="#6C63FF" />
+              <span>Consistency Score & Habit Tracking</span>
+            </div>
+            <button className={styles.viewAllBtn} onClick={() => navigateTo('/progress')}>
+              <span>View Insights</span> <ArrowRight size={14} />
+            </button>
+          </div>
+          <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(200px, 1fr))', gap: '20px', padding: '16px 0' }}>
+            <div style={{ background: 'rgba(0,0,0,0.25)', padding: '16px', borderRadius: '12px', border: '1px solid rgba(255,255,255,0.05)' }}>
+              <div style={{ fontSize: '13px', color: '#94a3b8', marginBottom: '4px' }}>Real Consistency Score</div>
+              <div style={{ fontSize: '32px', fontWeight: 800, color: '#a5b4fc' }}>{insights?.consistencyScore ?? 100}%</div>
+              <div style={{ fontSize: '12px', color: '#64748b', marginTop: '4px' }}>Based on task & habit adherence</div>
+            </div>
+            <div style={{ background: 'rgba(0,0,0,0.25)', padding: '16px', borderRadius: '12px', border: '1px solid rgba(255,255,255,0.05)' }}>
+              <div style={{ fontSize: '13px', color: '#94a3b8', marginBottom: '4px' }}>Active Habits Tracked</div>
+              <div style={{ fontSize: '32px', fontWeight: 800, color: '#34d399' }}>{habits.length}</div>
+              <div style={{ fontSize: '12px', color: '#64748b', marginTop: '4px' }}>Building daily momentum</div>
+            </div>
+            <div style={{ background: 'rgba(0,0,0,0.25)', padding: '16px', borderRadius: '12px', border: '1px solid rgba(255,255,255,0.05)' }}>
+              <div style={{ fontSize: '13px', color: '#94a3b8', marginBottom: '4px' }}>Long-term Goals</div>
+              <div style={{ fontSize: '32px', fontWeight: 800, color: '#fbbcfc', color: '#f472b6' }}>{goals.length}</div>
+              <div style={{ fontSize: '12px', color: '#64748b', marginTop: '4px' }}>Executive milestones</div>
+            </div>
+          </div>
         </div>
 
         {/* Quick Actions */}

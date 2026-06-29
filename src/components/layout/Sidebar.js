@@ -1,6 +1,6 @@
 'use client';
 
-import { Zap, Home, Calendar, Mail, Clock, CheckSquare, Target, MessageSquare, BarChart2, Settings, ChevronLeft, ChevronRight } from 'lucide-react';
+import { Zap, Home, Calendar, CheckSquare, Target, MessageSquare, BarChart2, Settings, ChevronLeft, ChevronRight } from 'lucide-react';
 import styles from './Sidebar.module.css';
 
 export default function Sidebar({ collapsed, onToggle, activePage, onNavigate, currentMode = 'Balanced', onOpenModesModal }) {
@@ -9,8 +9,6 @@ export default function Sidebar({ collapsed, onToggle, activePage, onNavigate, c
     { id: 'planner', label: 'Planner', icon: CheckSquare },
     { id: 'schedule', label: 'Calendar', icon: Calendar },
     { id: 'goals', label: 'Goals & Habits', icon: Target },
-    { id: 'today', label: 'Today', icon: Clock },
-    { id: 'inbox', label: 'Inbox', icon: Mail },
     { id: 'aichat', label: 'AI Chat', icon: MessageSquare, isAi: true },
     { id: 'progress', label: 'Progress', icon: BarChart2 },
   ];

@@ -44,32 +44,32 @@ export default function CommandPalette({ isOpen, onClose, onNavigate }) {
               <span>Go to Dashboard</span>
               <span className={styles.shortcut}>⌘ D</span>
             </button>
-            <button className={styles.item} onClick={() => handleAction(() => onNavigate('today'))}>
+            <button className={styles.item} onClick={() => handleAction(() => onNavigate('planner'))}>
               <Calendar size={16} />
-              <span>View Today&apos;s Plan</span>
-              <span className={styles.shortcut}>⌘ T</span>
+              <span>Open Planner</span>
+              <span className={styles.shortcut}>⌘ P</span>
             </button>
-            <button className={styles.item}>
-              <Plus size={16} />
-              <span>Quick Add Task</span>
-              <span className={styles.shortcut}>⌘ N</span>
+            <button className={styles.item} onClick={() => handleAction(() => onNavigate('aichat'))}>
+              <Sparkles size={16} />
+              <span>AI Assistant</span>
+              <span className={styles.shortcut}>⌘ A</span>
             </button>
           </div>
 
           {/* AI Actions */}
           <div className={styles.section}>
             <div className={styles.sectionTitle}>AI Actions</div>
-            <button className={styles.item}>
+            <button className={styles.item} onClick={() => handleAction(() => onNavigate('aichat'))}>
               <Sparkles size={16} className="text-primary-color" />
               <span className="ai-badge">AI</span>
               <span>Replan my day</span>
             </button>
-            <button className={styles.item}>
+            <button className={styles.item} onClick={() => handleAction(() => onNavigate('progress'))}>
               <Zap size={16} className="text-accent" />
               <span className="ai-badge">AI</span>
               <span>Summarize my progress</span>
             </button>
-            <button className={styles.item}>
+            <button className={styles.item} onClick={() => handleAction(() => onNavigate('aichat'))}>
               <ShieldAlert size={16} className="text-warning" />
               <span className="ai-badge">AI</span>
               <span>Predict deadline risks</span>
@@ -79,9 +79,9 @@ export default function CommandPalette({ isOpen, onClose, onNavigate }) {
           {/* Navigation */}
           <div className={styles.section}>
             <div className={styles.sectionTitle}>Navigation</div>
-            <button className={styles.item} onClick={() => handleAction(() => onNavigate('inbox'))}>
-              <Mail size={16} />
-              <span>Inbox</span>
+            <button className={styles.item} onClick={() => handleAction(() => onNavigate('planner'))}>
+              <Calendar size={16} />
+              <span>Planner</span>
             </button>
             <button className={styles.item} onClick={() => handleAction(() => onNavigate('schedule'))}>
               <Clock size={16} />

@@ -1,12 +1,12 @@
 'use client';
 
-import { Plus, Mail, Sparkles, Calendar as CalendarIcon } from 'lucide-react';
+import { Plus, Target, Sparkles, Calendar as CalendarIcon } from 'lucide-react';
 import styles from './QuickActionsGrid.module.css';
 
 export default function QuickActionsGrid({ onNavigate, onQuickAdd }) {
   const actions = [
     { label: 'Add Task', icon: Plus, onClick: onQuickAdd },
-    { label: 'Scan Gmail', icon: Mail, colorClass: 'iconPurple', onClick: () => onNavigate('inbox') },
+    { label: 'Track Goals', icon: Target, colorClass: 'iconPurple', onClick: () => onNavigate('goals') },
     { label: 'Chat with AI', icon: Sparkles, colorClass: 'iconPurple', onClick: () => onNavigate('aichat') },
     { label: 'View Calendar', icon: CalendarIcon, onClick: () => onNavigate('schedule') }
   ];

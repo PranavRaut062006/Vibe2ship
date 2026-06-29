@@ -39,9 +39,6 @@ export const generateSchedule = (date = 'today') => request('/api/schedule/gener
 export const replanSchedule = (delayedTask, reason) => request('/api/schedule/replan', { method: 'PUT', body: JSON.stringify({ delayedTask, reason }) });
 export const updateScheduleBlocks = (date = 'today', blocks) => request(`/api/schedule/${date}/blocks`, { method: 'PUT', body: JSON.stringify({ blocks }) });
 
-// Inbox
-export const scanInboxEmail = (emailText) => request('/api/inbox/scan', { method: 'POST', body: JSON.stringify({ emailText }) });
-export const saveApprovedInboxTasks = (tasks) => request('/api/inbox/save-approved', { method: 'POST', body: JSON.stringify({ tasks }) });
 export const extractTimetableImage = (imageBase64, mimeType) => request('/api/schedule/extract-image', { method: 'POST', body: JSON.stringify({ imageBase64, mimeType }) });
 
 // Chat

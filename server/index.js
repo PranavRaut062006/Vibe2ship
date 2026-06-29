@@ -14,7 +14,6 @@ import { db } from './lib/firebaseAdmin.js';
 // Routes
 import tasksRouter from './routes/tasks.js';
 import scheduleRouter from './routes/schedule.js';
-import inboxRouter from './routes/inbox.js';
 import chatRouter from './routes/chat.js';
 import userRouter from './routes/user.js';
 import memoryRouter from './routes/memory.js';
@@ -64,7 +63,7 @@ const initFirestore = async () => {
       console.log("✅ Default settings initialized in Firestore!");
     }
 
-    console.log("📋 Verified schema structure for collections: users, tasks, goals, habits, calendarEvents, gmailTasks, chatMessages, notifications, consistency, settings.");
+    console.log("📋 Verified schema structure for collections: users, tasks, goals, habits, calendarEvents, chatMessages, notifications, consistency, settings.");
   } catch (err) {
     console.error("❌ Error verifying Firestore schema:", err.message);
   }
@@ -75,7 +74,6 @@ initFirestore();
 // Mount Routes
 app.use('/api/tasks', tasksRouter);
 app.use('/api/schedule', scheduleRouter);
-app.use('/api/inbox', inboxRouter);
 app.use('/api/chat', chatRouter);
 app.use('/api/user', userRouter);
 app.use('/api/memory', memoryRouter);

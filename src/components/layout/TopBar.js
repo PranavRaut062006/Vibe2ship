@@ -42,6 +42,7 @@ export default function TopBar({ onOpenCommandPalette, onOpenNotifications, onOp
     setUser(null);
     setDropdownOpen(false);
     window.dispatchEvent(new CustomEvent('userAuthChanged'));
+    window.location.href = '/login';
   };
 
   const getInitials = (name) => {
@@ -97,17 +98,10 @@ export default function TopBar({ onOpenCommandPalette, onOpenNotifications, onOp
                     </div>
 
                     <button
-                      onClick={() => { setDropdownOpen(false); alert(`View Profile:\nName: ${user.name}\nEmail: ${user.email}\nSession: Active`); }}
+                      onClick={() => { setDropdownOpen(false); alert(`User Profile:\nName: ${user.name}\nEmail: ${user.email}\nStatus: Active`); }}
                       style={{ width: '100%', padding: '8px 12px', background: 'transparent', border: 'none', color: '#fff', textAlign: 'left', borderRadius: '6px', cursor: 'pointer', display: 'flex', alignItems: 'center', gap: '8px', fontSize: '13px' }}
                     >
-                      <User size={15} className="text-muted" /> View Profile
-                    </button>
-
-                    <button
-                      onClick={() => { setDropdownOpen(false); window.open('https://myaccount.google.com', '_blank'); }}
-                      style={{ width: '100%', padding: '8px 12px', background: 'transparent', border: 'none', color: '#fff', textAlign: 'left', borderRadius: '6px', cursor: 'pointer', display: 'flex', alignItems: 'center', gap: '8px', fontSize: '13px' }}
-                    >
-                      <ExternalLink size={15} className="text-muted" /> Google Account
+                      <User size={15} className="text-muted" /> User Profile
                     </button>
 
                     <div style={{ height: '1px', background: 'var(--border-color)', margin: '8px 0' }} />

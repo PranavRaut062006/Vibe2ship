@@ -60,7 +60,7 @@ export default function TimelineView({ onTriggerReplan, scheduledItems }) {
   }
 
   const formatAndSetBlocks = (dataBlocks) => {
-    const formatted = dataBlocks.map((b, idx) => {
+    const rawFormatted = dataBlocks.map((b, idx) => {
       const startDec = parseTimeToDecimal(b.startTime);
       const endDec = parseTimeToDecimal(b.endTime);
       const dur = Math.max(endDec - startDec, 0.25);
@@ -74,6 +74,7 @@ export default function TimelineView({ onTriggerReplan, scheduledItems }) {
         idx,
         id: b._id || `block_${idx}`,
         start: startDec,
+        end: startDec + dur,
         duration: dur,
         title: b.title || 'Untitled Block',
         category: b.type?.toUpperCase() || 'FOCUS',
@@ -83,8 +84,43 @@ export default function TimelineView({ onTriggerReplan, scheduledItems }) {
         canJoin: b.type === 'meeting',
         why: b.why || `Scheduled from ${b.startTime} to ${b.endTime}.`
       };
+    }).sort((a, b) => a.start - b.start || b.duration - a.duration);
+
+    // Group into connected overlapping clusters
+    const clusters = [];
+    rawFormatted.forEach(block => {
+      if (clusters.length === 0) {
+        clusters.push({ maxEnd: block.end, blocks: [block] });
+      } else {
+        const currentCluster = clusters[clusters.length - 1];
+        if (block.start < currentCluster.maxEnd) {
+          currentCluster.blocks.push(block);
+          currentCluster.maxEnd = Math.max(currentCluster.maxEnd, block.end);
+        } else {
+          clusters.push({ maxEnd: block.end, blocks: [block] });
+        }
+      }
     });
-    setBlocks(formatted);
+
+    // Assign columns within each cluster
+    clusters.forEach(cluster => {
+      const cols = [];
+      cluster.blocks.forEach(block => {
+        let colIdx = cols.findIndex(endVal => endVal <= block.start + 0.01);
+        if (colIdx === -1) {
+          colIdx = cols.length;
+          cols.push(block.end);
+        } else {
+          cols[colIdx] = block.end;
+        }
+        block.col = colIdx;
+      });
+      cluster.blocks.forEach(block => {
+        block.totalCols = cols.length;
+      });
+    });
+
+    setBlocks(rawFormatted);
   };
 
   const saveToFirebase = async (newRawBlocks) => {
@@ -276,13 +312,17 @@ export default function TimelineView({ onTriggerReplan, scheduledItems }) {
             {blocks.map((b) => {
               const topPx = (b.start - 7) * 60;
               const heightPx = Math.max(b.duration * 60, 40);
+              const colWidthStyle = b.totalCols > 1 ? {
+                width: `calc((100% - 90px) / ${b.totalCols} - 8px)`,
+                left: `calc(70px + ${b.col || 0} * ((100% - 90px) / ${b.totalCols}))`
+              } : {};
 
               if (b.isBuffer) {
                 return (
                   <div
                     key={b.id}
                     className={styles.bufferBlock}
-                    style={{ top: `${topPx}px`, height: `${heightPx}px` }}
+                    style={{ top: `${topPx}px`, height: `${heightPx}px`, ...colWidthStyle }}
                   >
                     <span>⚡ Buffer Zone (Cognitive Rest)</span>
                   </div>
@@ -295,7 +335,7 @@ export default function TimelineView({ onTriggerReplan, scheduledItems }) {
                   draggable
                   onDragStart={(e) => handleDragStart(e, b.idx)}
                   className={`${styles.eventBlock} ${styles[b.colorClass]}`}
-                  style={{ top: `${topPx}px`, height: `${heightPx}px`, cursor: 'grab' }}
+                  style={{ top: `${topPx}px`, height: `${heightPx}px`, cursor: 'grab', ...colWidthStyle }}
                 >
                   <div className={styles.eventHeader}>
                     <div className={styles.eventTitleRow}>
