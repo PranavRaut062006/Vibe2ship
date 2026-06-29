@@ -61,37 +61,46 @@ export default function InboxPage() {
 
   const handleConnectGmail = () => {
     setConnected(true);
-    setFetchMessage("✔ Gmail OAuth Connected successfully. Scanning unread emails for actionable tasks...");
-    // Sample simulated email text
-    const sampleEmail = `From: Prof. Sarah Jenkins <s.jenkins@university.edu>
-Subject: URGENT: Project Milestone 2 Deliverables & Presentation Schedule
-
-Hi Team,
-Please make sure you submit your final system architecture diagram by tomorrow at 5:00 PM. Also, prepare a 10-minute slide deck for the sprint review meeting scheduled for next Monday at 11:00 AM. Best regards, Sarah`;
-    setCustomText(sampleEmail);
-    handleScan(sampleEmail);
+    const userSession = localStorage.getItem('lifepilot_user');
+    const userEmail = userSession ? JSON.parse(userSession).email : 'user@gmail.com';
+    setFetchMessage(`✔ Connected to Gmail OAuth (${userEmail}). Paste your email threads below or click Scan to analyze new unread messages.`);
+    if (!customText.trim()) {
+      setFetchMessage(`✔ Connected to Gmail OAuth (${userEmail}). Please paste recent email threads below to extract actionable deliverables without duplicates.`);
+    } else {
+      handleScan(customText);
+    }
   };
 
   const handleScan = async (textToScan) => {
     setFetchMessage(null);
-    if (!textToScan || !textToScan.trim()) {
-      setFetchMessage("Please paste email thread content below to extract tasks.");
+    const text = typeof textToScan === 'string' ? textToScan : customText;
+    if (!text || !text.trim()) {
+      setFetchMessage("Please paste email content below or provide unread communication threads to extract actionable tasks.");
       return;
     }
+
+    // Check against already processed emails stored locally/in session
+    const processedHashes = JSON.parse(localStorage.getItem('lifepilot_processed_emails') || '[]');
+    const textHash = text.trim().substring(0, 40).toLowerCase();
+    if (processedHashes.includes(textHash)) {
+      setFetchMessage("ℹ️ This exact email thread was already scanned and processed. Ignoring duplicate content.");
+      setPreviewTasks([]);
+      return;
+    }
+
     setScanning(true);
     try {
-      const res = await scanInboxEmail(textToScan);
+      const res = await scanInboxEmail(text);
       if (res && res.message) {
         setFetchMessage(res.message);
       }
       if (res && res.extractedTasks) {
         setPreviewTasks(res.extractedTasks);
-        // Select all by default
         setSelectedPreviewIds(new Set(res.extractedTasks.map(t => t.tempId)));
       }
     } catch (err) {
       console.error("Error scanning email:", err);
-      setFetchMessage("⚠️ Failed to scan email content. Please try again.");
+      setFetchMessage("⚠️ Failed to scan email content. Please verify API connection.");
     } finally {
       setScanning(false);
     }
@@ -113,11 +122,23 @@ Please make sure you submit your final system architecture diagram by tomorrow a
     setSavingApproved(true);
     try {
       await saveApprovedInboxTasks(tasksToSave);
+      
+      // Record processed email hash to avoid future duplicate scanning
+      if (customText.trim()) {
+        const processedHashes = JSON.parse(localStorage.getItem('lifepilot_processed_emails') || '[]');
+        const textHash = customText.trim().substring(0, 40).toLowerCase();
+        if (!processedHashes.includes(textHash)) {
+          processedHashes.push(textHash);
+          localStorage.setItem('lifepilot_processed_emails', JSON.stringify(processedHashes));
+        }
+      }
+
       setPreviewTasks([]);
       setSelectedPreviewIds(new Set());
       setCustomText('');
       await loadAllTasks();
       window.dispatchEvent(new CustomEvent('taskCreated'));
+      window.dispatchEvent(new CustomEvent('scheduleUpdated'));
       alert(`✔ Successfully saved ${tasksToSave.length} approved task(s) to Firebase!`);
     } catch (err) {
       console.error("Failed to save approved tasks:", err);

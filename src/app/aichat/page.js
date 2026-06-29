@@ -90,6 +90,17 @@ export default function AIChatPage() {
         actions: res.assistantMessage?.actions || []
       };
       setMessages(prev => [...prev, aiMsg]);
+
+      // Optional Voice Response (Text-to-Speech)
+      if (typeof window !== 'undefined' && 'speechSynthesis' in window) {
+        const voicePref = localStorage.getItem('lifepilot_voice_enabled');
+        if (voicePref !== 'false') {
+          window.speechSynthesis.cancel();
+          const utterance = new SpeechSynthesisUtterance(aiMsg.text);
+          utterance.rate = 1.05;
+          window.speechSynthesis.speak(utterance);
+        }
+      }
     } catch (err) {
       console.error("Chat error:", err);
       setMessages(prev => [...prev, {
@@ -150,8 +161,9 @@ export default function AIChatPage() {
 
     recognition.onresult = (event) => {
       const transcript = event.results[0][0].transcript;
-      setInput(prev => (prev ? `${prev} ${transcript}` : transcript));
+      setInput(transcript);
       setIsListening(false);
+      handleSend(transcript);
     };
 
     recognition.onerror = (event) => {

@@ -28,6 +28,17 @@ export default function PlannerPage() {
 
   useEffect(() => {
     loadTasks();
+    const handleSync = () => loadTasks();
+    window.addEventListener('taskCreated', handleSync);
+    window.addEventListener('taskUpdated', handleSync);
+    window.addEventListener('scheduleUpdated', handleSync);
+    window.addEventListener('userAuthChanged', handleSync);
+    return () => {
+      window.removeEventListener('taskCreated', handleSync);
+      window.removeEventListener('taskUpdated', handleSync);
+      window.removeEventListener('scheduleUpdated', handleSync);
+      window.removeEventListener('userAuthChanged', handleSync);
+    };
   }, []);
 
   async function loadTasks() {
@@ -89,6 +100,8 @@ export default function PlannerPage() {
       }
       setIsModalOpen(false);
       await loadTasks();
+      window.dispatchEvent(new CustomEvent('taskUpdated'));
+      window.dispatchEvent(new CustomEvent('scheduleUpdated'));
     } catch (err) {
       console.error("Error saving task:", err);
       alert("Failed to save task.");
@@ -102,6 +115,8 @@ export default function PlannerPage() {
     try {
       await updateTask(task._id || task.id, { status: newStatus });
       setTasks(prev => prev.map(t => (t._id || t.id) === (task._id || task.id) ? { ...t, status: newStatus } : t));
+      window.dispatchEvent(new CustomEvent('taskUpdated'));
+      window.dispatchEvent(new CustomEvent('scheduleUpdated'));
     } catch (err) {
       console.error("Failed to update status:", err);
     }
@@ -112,6 +127,8 @@ export default function PlannerPage() {
     try {
       await deleteTask(id);
       setTasks(prev => prev.filter(t => (t._id || t.id) !== id));
+      window.dispatchEvent(new CustomEvent('taskUpdated'));
+      window.dispatchEvent(new CustomEvent('scheduleUpdated'));
     } catch (err) {
       console.error("Failed to delete task:", err);
     }

@@ -1,7 +1,7 @@
 'use client';
 
 import { useState, useEffect } from 'react';
-import { ChevronLeft, ChevronRight, Video, HelpCircle, Move, Edit3, Plus, Sparkles, Clock } from 'lucide-react';
+import { ChevronLeft, ChevronRight, Video, HelpCircle, Move, Edit3, Plus, Sparkles, Clock, Circle, CheckCircle2, Trash2 } from 'lucide-react';
 import { fetchSchedule, generateSchedule, updateScheduleBlocks } from '@/lib/api';
 import styles from './TimelineView.module.css';
 
@@ -92,9 +92,22 @@ export default function TimelineView({ onTriggerReplan, scheduledItems }) {
     formatAndSetBlocks(newRawBlocks);
     try {
       await updateScheduleBlocks('today', newRawBlocks);
+      window.dispatchEvent(new CustomEvent('scheduleUpdated'));
+      window.dispatchEvent(new CustomEvent('taskUpdated'));
     } catch (err) {
       console.error("Error saving updated blocks to Firebase:", err);
     }
+  };
+
+  const handleDeleteBlock = async (index) => {
+    if (!confirm("Delete this calendar block?")) return;
+    const updated = rawBlocks.filter((_, i) => i !== index);
+    await saveToFirebase(updated);
+  };
+
+  const handleCompleteBlock = async (index) => {
+    const updated = rawBlocks.filter((_, i) => i !== index);
+    await saveToFirebase(updated);
   };
 
   // Move block start time by deltaMins (+15 or -15)
@@ -296,10 +309,12 @@ export default function TimelineView({ onTriggerReplan, scheduledItems }) {
                     </div>
 
                     <div className={styles.eventActions}>
+                      <button className={styles.actionIconBtn} onClick={() => handleCompleteBlock(b.idx)} title="Mark Complete"><Circle size={14} /></button>
                       <button className={styles.actionIconBtn} onClick={() => handleMoveTime(b.idx, -15)} title="Move earlier 15m">⬆</button>
                       <button className={styles.actionIconBtn} onClick={() => handleMoveTime(b.idx, 15)} title="Move later 15m">⬇</button>
                       <button className={styles.actionIconBtn} onClick={() => handleResizeDuration(b.idx, 15)} title="Extend duration +15m">+15m</button>
                       <button className={styles.actionIconBtn} onClick={() => handleOpenEdit(b.idx)} title="Edit block directly"><Edit3 size={14} /></button>
+                      <button className={styles.actionIconBtn} onClick={() => handleDeleteBlock(b.idx)} title="Delete Block" style={{ color: '#ef4444' }}><Trash2 size={14} /></button>
                     </div>
                   </div>
 

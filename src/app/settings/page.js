@@ -8,6 +8,7 @@ import styles from './page.module.css';
 export default function SettingsPage() {
   const [name, setName] = useState('');
   const [email, setEmail] = useState('');
+  const [voiceEnabled, setVoiceEnabled] = useState(true);
   const [loading, setLoading] = useState(true);
   const [saving, setSaving] = useState(false);
   const [status, setStatus] = useState('');
@@ -15,10 +16,17 @@ export default function SettingsPage() {
   useEffect(() => {
     async function loadProfile() {
       try {
+        const storedVoice = localStorage.getItem('lifepilot_voice_enabled');
+        if (storedVoice !== null) {
+          setVoiceEnabled(storedVoice === 'true');
+        }
         const res = await fetchUser();
         if (res.user) {
           setName(res.user.name || '');
           setEmail(res.user.email || '');
+          if (res.user.voiceEnabled !== undefined) {
+            setVoiceEnabled(res.user.voiceEnabled);
+          }
         }
       } catch (err) {
         console.error("Failed to fetch user settings:", err);
@@ -34,7 +42,8 @@ export default function SettingsPage() {
     setSaving(true);
     setStatus('');
     try {
-      await updateUser({ name, email });
+      localStorage.setItem('lifepilot_voice_enabled', String(voiceEnabled));
+      await updateUser({ name, email, voiceEnabled });
       setStatus('Settings saved successfully!');
       setTimeout(() => setStatus(''), 3000);
     } catch (err) {
@@ -89,6 +98,19 @@ export default function SettingsPage() {
               placeholder="user@example.com"
               required
             />
+          </div>
+
+          <div className={styles.formGroup} style={{ display: 'flex', alignItems: 'center', gap: '12px', cursor: 'pointer' }} onClick={() => setVoiceEnabled(prev => !prev)}>
+            <input
+              type="checkbox"
+              checked={voiceEnabled}
+              onChange={(e) => setVoiceEnabled(e.target.checked)}
+              style={{ width: '18px', height: '18px', cursor: 'pointer' }}
+            />
+            <div>
+              <div style={{ fontWeight: 600, color: '#fff', fontSize: '14px' }}>Enable AI Voice Responses (Text-to-Speech)</div>
+              <div style={{ fontSize: '12px', color: 'var(--text-muted)' }}>LifePilot AI will speak consulting replies aloud using browser speech synthesis.</div>
+            </div>
           </div>
 
           <button type="submit" className={styles.saveBtn} disabled={saving}>

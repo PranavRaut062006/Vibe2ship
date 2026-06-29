@@ -4,9 +4,11 @@ const getBaseUrl = () => {
 
 async function request(endpoint, options = {}) {
   const url = `${getBaseUrl()}${endpoint}`;
+  const userId = typeof window !== 'undefined' ? (localStorage.getItem('lifepilot_uid') || 'default-user') : 'default-user';
   const config = {
     headers: {
       'Content-Type': 'application/json',
+      'x-user-id': userId,
       ...options.headers,
     },
     ...options,

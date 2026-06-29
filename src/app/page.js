@@ -2,8 +2,8 @@
 
 import { useState, useEffect } from 'react';
 import { useRouter } from 'next/navigation';
-import { Calendar, CheckSquare, Clock, ArrowRight, Target, Plus, AlertCircle } from 'lucide-react';
-import { fetchTasks, fetchSchedule } from '@/lib/api';
+import { Calendar, CheckSquare, Clock, ArrowRight, Target, Plus, AlertCircle, Circle, CheckCircle2, Edit2, Trash2 } from 'lucide-react';
+import { fetchTasks, fetchSchedule, updateTask, deleteTask } from '@/lib/api';
 import styles from './page.module.css';
 
 export default function DashboardPage() {
@@ -12,24 +12,36 @@ export default function DashboardPage() {
   const [scheduleBlocks, setScheduleBlocks] = useState([]);
   const [loading, setLoading] = useState(true);
 
-  useEffect(() => {
-    async function loadDashboardData() {
-      try {
-        setLoading(true);
-        const [tRes, sRes] = await Promise.all([fetchTasks(), fetchSchedule('today')]);
-        setTasks(tRes.tasks || []);
-        if (sRes.schedule && sRes.schedule.blocks) {
-          setScheduleBlocks(sRes.schedule.blocks);
-        } else {
-          setScheduleBlocks([]);
-        }
-      } catch (err) {
-        console.error("Failed to load dashboard summaries:", err);
-      } finally {
-        setLoading(false);
+  const loadDashboardData = async () => {
+    try {
+      setLoading(true);
+      const [tRes, sRes] = await Promise.all([fetchTasks(), fetchSchedule('today')]);
+      setTasks(tRes.tasks || []);
+      if (sRes.schedule && sRes.schedule.blocks) {
+        setScheduleBlocks(sRes.schedule.blocks);
+      } else {
+        setScheduleBlocks([]);
       }
+    } catch (err) {
+      console.error("Failed to load dashboard summaries:", err);
+    } finally {
+      setLoading(false);
     }
+  };
+
+  useEffect(() => {
     loadDashboardData();
+    const handleSync = () => loadDashboardData();
+    window.addEventListener('taskCreated', handleSync);
+    window.addEventListener('taskUpdated', handleSync);
+    window.addEventListener('scheduleUpdated', handleSync);
+    window.addEventListener('userAuthChanged', handleSync);
+    return () => {
+      window.removeEventListener('taskCreated', handleSync);
+      window.removeEventListener('taskUpdated', handleSync);
+      window.removeEventListener('scheduleUpdated', handleSync);
+      window.removeEventListener('userAuthChanged', handleSync);
+    };
   }, []);
 
   const pendingTasks = tasks.filter(t => t.status !== 'completed');
@@ -38,6 +50,42 @@ export default function DashboardPage() {
 
   const navigateTo = (path) => {
     router.push(path);
+  };
+
+  const handleToggleComplete = async (task) => {
+    try {
+      await updateTask(task._id || task.id, { status: 'completed' });
+      setTasks(prev => prev.map(t => (t._id || t.id) === (task._id || task.id) ? { ...t, status: 'completed' } : t));
+      window.dispatchEvent(new CustomEvent('taskUpdated'));
+      window.dispatchEvent(new CustomEvent('scheduleUpdated'));
+    } catch (err) {
+      console.error("Failed to update task status:", err);
+    }
+  };
+
+  const handleEdit = async (task) => {
+    const newTitle = prompt("Edit task title:", task.title);
+    if (!newTitle || newTitle.trim() === task.title) return;
+    try {
+      await updateTask(task._id || task.id, { title: newTitle.trim() });
+      await loadDashboardData();
+      window.dispatchEvent(new CustomEvent('taskUpdated'));
+      window.dispatchEvent(new CustomEvent('scheduleUpdated'));
+    } catch (err) {
+      console.error("Failed to edit task:", err);
+    }
+  };
+
+  const handleDelete = async (task) => {
+    if (!confirm(`Delete task "${task.title}"?`)) return;
+    try {
+      await deleteTask(task._id || task.id);
+      setTasks(prev => prev.filter(t => (t._id || t.id) !== (task._id || task.id)));
+      window.dispatchEvent(new CustomEvent('taskUpdated'));
+      window.dispatchEvent(new CustomEvent('scheduleUpdated'));
+    } catch (err) {
+      console.error("Failed to delete task:", err);
+    }
   };
 
   return (
@@ -101,15 +149,29 @@ export default function DashboardPage() {
               {upcomingDeadlines.map(task => {
                 const badgeClass = task.priority === 'P1' ? styles.badgeP1 : task.priority === 'P2' ? styles.badgeP2 : styles.badgeP3;
                 return (
-                  <div key={task._id || task.id} className={styles.listItem}>
-                    <div>
-                      <div className={styles.itemTitle}>{task.title}</div>
-                      <div className={styles.itemSub}>
-                        <span>Deadline: {task.deadline || 'Today'}</span>
-                        {task.category && <span>• {task.category}</span>}
+                  <div key={task._id || task.id} className={styles.listItem} style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: '12px' }}>
+                    <div style={{ display: 'flex', alignItems: 'center', gap: '10px', flex: 1, overflow: 'hidden' }}>
+                      <div onClick={() => handleToggleComplete(task)} style={{ cursor: 'pointer', color: 'var(--text-muted)', display: 'flex' }} title="Mark Complete">
+                        <Circle size={18} />
+                      </div>
+                      <div style={{ overflow: 'hidden' }}>
+                        <div className={styles.itemTitle} style={{ whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>{task.title}</div>
+                        <div className={styles.itemSub}>
+                          <span>Deadline: {task.deadline || 'Today'}</span>
+                          {task.category && <span> • {task.category}</span>}
+                        </div>
                       </div>
                     </div>
-                    <span className={`${styles.badge} ${badgeClass}`}>{task.priority || 'P2'}</span>
+
+                    <div style={{ display: 'flex', alignItems: 'center', gap: '6px' }}>
+                      <span className={`${styles.badge} ${badgeClass}`}>{task.priority || 'P2'}</span>
+                      <button onClick={() => handleEdit(task)} style={{ background: 'transparent', border: 'none', color: 'var(--text-muted)', cursor: 'pointer', padding: '4px' }} title="Edit Task">
+                        <Edit2 size={14} />
+                      </button>
+                      <button onClick={() => handleDelete(task)} style={{ background: 'transparent', border: 'none', color: '#ef4444', cursor: 'pointer', padding: '4px' }} title="Delete Task">
+                        <Trash2 size={14} />
+                      </button>
+                    </div>
                   </div>
                 );
               })}
@@ -140,15 +202,9 @@ export default function DashboardPage() {
             </button>
 
             <button className={styles.actionBtn} onClick={() => navigateTo('/goals')}>
-              <Target size={22} style={{ color: '#f59e0b' }} />
-              <span className={styles.actionTitle}>Set Goals & Habits</span>
-              <span className={styles.actionSub}>Track executive milestones and daily habit streaks</span>
-            </button>
-
-            <button className={styles.actionBtn} onClick={() => navigateTo('/inbox')}>
-              <AlertCircle size={22} style={{ color: '#ec4899' }} />
-              <span className={styles.actionTitle}>Check Inbox Queue</span>
-              <span className={styles.actionSub}>Review parsed tasks before adding to your queue</span>
+              <Target size={22} style={{ color: '#10b981' }} />
+              <span className={styles.actionTitle}>Track Goals & Habits</span>
+              <span className={styles.actionSub}>Build streaks and maintain consistency scores</span>
             </button>
           </div>
         </div>

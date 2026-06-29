@@ -1,30 +1,9 @@
 'use client';
 
-import { useState, useEffect } from 'react';
-import { Zap, Home, Calendar, Mail, Clock, CheckSquare, Target, MessageSquare, BarChart2, Settings, ChevronLeft, ChevronRight, TrendingUp } from 'lucide-react';
-import { fetchUser } from '@/lib/api';
+import { Zap, Home, Calendar, Mail, Clock, CheckSquare, Target, MessageSquare, BarChart2, Settings, ChevronLeft, ChevronRight } from 'lucide-react';
 import styles from './Sidebar.module.css';
 
 export default function Sidebar({ collapsed, onToggle, activePage, onNavigate, currentMode = 'Balanced', onOpenModesModal }) {
-  const [userProfile, setUserProfile] = useState({ name: 'New User', consistencyScore: 0 });
-
-  useEffect(() => {
-    async function getProfile() {
-      try {
-        const res = await fetchUser();
-        if (res.user) {
-          setUserProfile({
-            name: res.user.name || 'New User',
-            consistencyScore: res.user.consistencyScore || 0
-          });
-        }
-      } catch (err) {
-        console.error("Failed to load user in sidebar:", err);
-      }
-    }
-    getProfile();
-  }, []);
-
   const navItems = [
     { id: 'dashboard', label: 'Dashboard', icon: Home },
     { id: 'planner', label: 'Planner', icon: CheckSquare },
@@ -35,13 +14,6 @@ export default function Sidebar({ collapsed, onToggle, activePage, onNavigate, c
     { id: 'aichat', label: 'AI Chat', icon: MessageSquare, isAi: true },
     { id: 'progress', label: 'Progress', icon: BarChart2 },
   ];
-
-  const getInitials = (name) => {
-    if (!name) return 'NU';
-    const parts = name.trim().split(' ');
-    if (parts.length >= 2) return (parts[0][0] + parts[1][0]).toUpperCase();
-    return name.substring(0, 2).toUpperCase();
-  };
 
   return (
     <aside className={`${styles.sidebar} ${collapsed ? styles.collapsed : ''}`}>
@@ -100,31 +72,23 @@ export default function Sidebar({ collapsed, onToggle, activePage, onNavigate, c
         </button>
       </nav>
 
-      {/* Bottom User Section */}
+      {/* Bottom Section */}
       <div className={styles.userSection}>
-        {!collapsed && (
-          <button
-            className={styles.modeTrigger}
-            onClick={onOpenModesModal}
-            title="Switch Adaptive Mode"
-          >
-            <span>Mode: <strong>{currentMode}</strong></span>
-            <span>⚙️</span>
-          </button>
-        )}
-
-        <div className={styles.userInfo}>
-          <div className={styles.avatar}>{getInitials(userProfile.name)}</div>
-          {!collapsed && (
-            <div className={styles.userDetails}>
-              <span className={styles.userName}>{userProfile.name}</span>
-              <div className={styles.consistencyPill}>
-                <span className="mono">{userProfile.consistencyScore}</span>
-                <TrendingUp size={12} className={styles.trendIcon} />
-              </div>
-            </div>
+        <button
+          className={styles.modeTrigger}
+          onClick={onOpenModesModal}
+          title="Switch Adaptive Mode"
+          style={{ width: '100%', display: 'flex', justifyContent: 'space-between', alignItems: 'center', padding: '10px 12px', background: 'rgba(108, 99, 255, 0.15)', border: '1px solid rgba(108, 99, 255, 0.3)', borderRadius: '8px', color: '#fff', cursor: 'pointer' }}
+        >
+          {!collapsed ? (
+            <>
+              <span style={{ fontSize: '13px' }}>Mode: <strong style={{ color: '#c084fc' }}>{currentMode}</strong></span>
+              <span>⚙️</span>
+            </>
+          ) : (
+            <span style={{ fontSize: '16px', margin: '0 auto' }}>⚙️</span>
           )}
-        </div>
+        </button>
       </div>
     </aside>
   );

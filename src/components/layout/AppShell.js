@@ -5,9 +5,7 @@ import { useRouter, usePathname } from 'next/navigation';
 import Sidebar from './Sidebar';
 import TopBar from './TopBar';
 import MobileNav from './MobileNav';
-import FloatingAIButton from '../ui/FloatingAIButton';
 import CommandPalette from '../overlays/CommandPalette';
-import AIChatPanel from '../overlays/AIChatPanel';
 import QuickAddModal from '../overlays/QuickAddModal';
 import NotificationPanel from '../overlays/NotificationPanel';
 import AdaptiveModesModal from '../common/AdaptiveModesModal';
@@ -19,7 +17,6 @@ export default function AppShell({ children }) {
   const pathname = usePathname();
   const [sidebarCollapsed, setSidebarCollapsed] = useState(false);
   const [commandPaletteOpen, setCommandPaletteOpen] = useState(false);
-  const [aiChatOpen, setAiChatOpen] = useState(false);
   const [quickAddOpen, setQuickAddOpen] = useState(false);
   const [notifOpen, setNotifOpen] = useState(false);
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
@@ -52,15 +49,12 @@ export default function AppShell({ children }) {
   // Keyboard shortcuts
   useEffect(() => {
     const handleKeyDown = (e) => {
-      // Cmd+K or Ctrl+K — command palette
       if ((e.metaKey || e.ctrlKey) && e.key === 'k') {
         e.preventDefault();
         setCommandPaletteOpen(prev => !prev);
       }
-      // Escape — close overlays
       if (e.key === 'Escape') {
         setCommandPaletteOpen(false);
-        setAiChatOpen(false);
         setQuickAddOpen(false);
         setNotifOpen(false);
       }
@@ -94,17 +88,12 @@ export default function AppShell({ children }) {
       </div>
 
       <MobileNav activePage={activePage} onNavigate={navigateTo} />
-      <FloatingAIButton onClick={() => setAiChatOpen(true)} />
 
       {/* Overlays */}
       <CommandPalette
         isOpen={commandPaletteOpen}
         onClose={() => setCommandPaletteOpen(false)}
         onNavigate={navigateTo}
-      />
-      <AIChatPanel
-        isOpen={aiChatOpen}
-        onClose={() => setAiChatOpen(false)}
       />
       <QuickAddModal
         isOpen={quickAddOpen}
